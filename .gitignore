@@ -1,0 +1,93 @@
+# -------------------------------------------------------------------
+# 1. DEPENDENCIES & PACKAGE MANAGERS (RECURSIVE)
+# -------------------------------------------------------------------
+node_modules/
+**/node_modules/
+jspm_packages/
+**/jspm_packages/
+.pnp
+.pnp.js
+**/pnpm-lock.yaml
+**/yarn.lock
+
+# -------------------------------------------------------------------
+# 2. SECURITY & SENSITIVE CREDENTIALS (CRITICAL TO IGNORE)
+# -------------------------------------------------------------------
+# Ignore all environment variables files recursively
+.env
+.env.*
+*.env
+**/.env
+**/.env.*
+**/development.key
+**/*.pem
+**/*.key
+**/*.cert
+**/*.pfx
+
+# -------------------------------------------------------------------
+# 3. LOCAL DATABASES & PRIVATE AI MEMORIES
+# -------------------------------------------------------------------
+# Ignore local chat databases, user states, and long term memories
+data/
+**/data/
+backups/
+**/backups/
+db.sqlite3
+**/*.db
+**/*.sqlite
+**/*.sqlite3
+**/*.log
+
+# -------------------------------------------------------------------
+# 4. RUNTIME LOGS, UPLOADS & TEMPORARY FILES
+# -------------------------------------------------------------------
+logs/
+**/logs/
+temp/
+**/temp/
+uploads/
+**/uploads/
+astrix_audio/
+**/astrix_audio/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# -------------------------------------------------------------------
+# 5. FRONTEND & BACKEND BUILD OUTPUTS
+# -------------------------------------------------------------------
+dist/
+**/dist/
+build/
+**/build/
+out/
+**/out/
+.next/
+**/.next/
+.docusaurus/
+**/.docusaurus/
+
+# -------------------------------------------------------------------
+# 6. IDE, EDITOR & OS FILES
+# -------------------------------------------------------------------
+.vscode/
+**/.vscode/
+.idea/
+**/.idea/
+.DS_Store
+**/Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
+
+# -------------------------------------------------------------------
+# 7. LARGE MEDIA & 3D MODELS (OPTIONAL BUT RECOMMENDED)
+# -------------------------------------------------------------------
+# Large 3D VRM/VRMA files can be tracked with Git LFS if needed, or ignored:
+# *.vrm
+# *.vrma

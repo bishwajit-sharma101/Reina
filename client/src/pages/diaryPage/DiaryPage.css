@@ -1,0 +1,241 @@
+
+/* Modern Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Animations */
+@keyframes scanning {
+    0% { top: 0%; opacity: 0; }
+    5% { opacity: 1; }
+    95% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+}
+
+.scan-line {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.2), transparent);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+    animation: scanning 4s linear infinite;
+    pointer-events: none;
+    z-index: 10;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0) translateX(0); }
+    25% { transform: translateY(-10px) translateX(5px); }
+    50% { transform: translateY(0) translateX(10px); }
+    75% { transform: translateY(10px) translateX(5px); }
+}
+
+.floating-glow {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.05) 0%, transparent 70%);
+    border-radius: 50%;
+    filter: blur(80px);
+    z-index: -1;
+    animation: float 20s ease-in-out infinite;
+    pointer-events: none;
+}
+
+/* Persona Specific refinements */
+.persona-yandere-text {
+    text-shadow: 0 0 8px rgba(220, 38, 38, 0.3);
+}
+
+/* Found Note Overlay Styles - Weathered Page Redesign */
+.found-note-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: radial-gradient(circle at center, #1a0505 0%, #000 100%);
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 100px 20px;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+}
+
+/* Subtle Film Grain */
+.noise-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('https://grain-y-gradients.vercel.app/noise.svg');
+    opacity: 0.1;
+    pointer-events: none;
+    z-index: 10001;
+}
+
+.found-note-overlay::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, transparent 40%, rgba(0, 0, 0, 0.8) 90%);
+    pointer-events: none;
+    z-index: 6;
+}
+
+/* The Weathered Parchment */
+.note-paper {
+    width: 100%;
+    max-width: 900px;
+    height: auto !important;
+    min-height: fit-content;
+    background-color: #f2eecd; /* Aged paper color */
+    background-image: url("https://www.transparenttextures.com/patterns/old-mathematics.png"); /* Subtle paper texture */
+    position: relative;
+    padding: 100px 80px 200px 80px; /* Much deeper padding */
+    box-shadow: 
+        0 30px 100px rgba(0,0,0,0.9),
+        0 0 20px rgba(0,0,0,0.2) inset;
+    border-radius: 4px;
+    margin: 50px auto 150px auto; /* Centering via margin */
+    border: 1px solid #d3ccaf;
+    flex-shrink: 0;
+    line-height: normal; /* Reset line-height just in case */
+}
+
+.note-paper::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(0,0,0,0.05) 100%);
+    pointer-events: none;
+}
+
+.note-content {
+    flex: 1;
+    position: relative;
+    z-index: 2;
+}
+
+.note-body {
+    font-family: 'Georgia', serif;
+    color: #1a1a1a; /* True ink color */
+    font-size: 20px;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    letter-spacing: 0.5px;
+    text-shadow: 0.5px 0.5px 0px rgba(0,0,0,0.1);
+}
+
+.note-footer {
+    margin-top: 80px;
+    text-align: right;
+    font-style: italic;
+    font-family: 'Georgia', serif;
+    border-top: 1px solid rgba(0,0,0,0.05);
+    padding-top: 20px;
+}
+
+.waiting-status {
+    color: #800;
+    font-size: 14px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.note-timer {
+    color: #333;
+    font-size: 12px;
+    font-family: monospace;
+    opacity: 0.8;
+}
+
+/* Actions - High Visibility */
+.note-actions {
+    margin-top: 100px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 3;
+}
+
+.note-btn {
+    background: transparent;
+    border: none;
+    font-family: 'Georgia', serif;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s;
+    letter-spacing: 1px;
+    padding: 10px 20px;
+}
+
+.back-btn {
+    color: #666;
+    border: 1px solid transparent;
+}
+
+.back-btn:hover {
+    color: #000;
+    background: rgba(0,0,0,0.05);
+    border-color: rgba(0,0,0,0.1);
+}
+
+.knock-btn {
+    color: #a00;
+    font-weight: bold;
+    border: 2px solid #a00;
+    border-radius: 4px;
+}
+
+.knock-btn:hover {
+    color: #fff;
+    background: #a00;
+    box-shadow: 0 0 20px rgba(170, 0, 0, 0.3);
+}
+
+/* Custom Scrollbar for the parchment feel */
+.found-note-overlay::-webkit-scrollbar {
+    width: 8px;
+}
+
+.found-note-overlay::-webkit-scrollbar-track {
+    background: #000;
+}
+
+.found-note-overlay::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 10px;
+}

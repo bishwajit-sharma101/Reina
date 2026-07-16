@@ -1,0 +1,47 @@
+# -------------------------------------------------------------------
+# 1. DEPENDENCIES & ENVIRONMENT (CRITICAL FOR ALL NODE/PYTHON APPS)
+# -------------------------------------------------------------------
+# Node.js
+/node_modules
+/client/node_modules
+/server/node_modules
+
+# Python (Virtual Environment)
+/venv
+__pycache__
+*.pyc
+
+# Security & Credentials (MUST NOT BE COMMITTED)
+.env
+# If you have specific secret keys outside of .env (e.g., development.key)
+*.pem 
+*.key 
+.npmrc
+
+# -------------------------------------------------------------------
+# 2. RUNTIME & LOGS (Temporary/Generated Files)
+# -------------------------------------------------------------------
+# Backend Logs
+/server/logs
+npm-debug.log*
+yarn-error.log*
+
+# FRONTEND Build Output (React/Client)
+/client/dist
+/client/build
+
+# TEMPORARY/UPLOAD FOLDERS (Where translated audio is stored)
+# Adjust these paths based on where your Python API saves files
+/server/temp
+/server/uploads
+
+# Kokoro/TTS generated WAV files (as mentioned in a previous file)
+/model/audio/*.wav
+/model/audio/*.txt
+
+# -------------------------------------------------------------------
+# 3. OPERATING SYSTEM & EDITOR FILES
+# -------------------------------------------------------------------
+.DS_Store # macOS
+Thumbs.db # Windows
+.vscode/ # VS Code settings (optional, but usually ignored)
