@@ -1,4 +1,4 @@
-﻿/* ================================================================
+/* ================================================================
    ReinaPage â€” Yandere Dark Aesthetic
    Character centered, glass input at bottom
    ================================================================ */
@@ -501,6 +501,78 @@
     }
 }
 
+/* ---- Background Music Mode Selector Button ---- */
+.reina-bgm-btn {
+    position: absolute;
+    right: 130px;
+    bottom: 20px;
+    z-index: 40;
+    height: 42px;
+    padding: 0 16px;
+    border-radius: 12px;
+    background: rgba(10, 0, 0, 0.6);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 102, 178, 0.25);
+    color: #ff99cc;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.reina-bgm-btn.mode-sweet_love {
+    background: rgba(255, 51, 136, 0.22);
+    border-color: #ff3388;
+    color: #ffffff;
+    box-shadow: 0 0 20px rgba(255, 51, 136, 0.4);
+}
+
+.reina-bgm-btn.mode-yandere {
+    background: rgba(180, 0, 30, 0.3);
+    border-color: #ff0033;
+    color: #ff6680;
+    box-shadow: 0 0 20px rgba(255, 0, 51, 0.4);
+}
+
+.reina-bgm-btn:hover {
+    transform: scale(1.05);
+}
+
+/* ---- Standalone Mute Button ---- */
+.reina-mute-btn {
+    position: absolute;
+    right: 75px;
+    bottom: 20px;
+    z-index: 40;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: rgba(10, 0, 0, 0.6);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.reina-mute-btn.muted {
+    background: rgba(180, 0, 30, 0.3);
+    border-color: #ff0033;
+    color: #ff6680;
+    box-shadow: 0 0 15px rgba(255, 0, 51, 0.4);
+}
+
+.reina-mute-btn:hover {
+    transform: scale(1.08);
+}
+
 /* ---- Animation Picker UI ---- */
 .reina-anim-toggle {
     position: absolute;
@@ -693,10 +765,10 @@
 /* ================================================================
    Scary Yandere Loading Overlay
    ================================================================ */
-.scary-loader-overlay {
+.scary-loader-overlay.awakening-mode {
     position: fixed;
     inset: 0;
-    background: #050000;
+    background: radial-gradient(circle at center, #1a0004 0%, #050001 65%, #000000 100%);
     z-index: 10000;
     display: flex;
     align-items: center;
@@ -704,50 +776,425 @@
     overflow: hidden;
 }
 
-.noise-overlay {
-    position: absolute;
-    inset: 0;
-    z-index: 10001;
-    pointer-events: none;
-    opacity: 0.12;
-    background: url('https://upload.wikimedia.org/wikipedia/commons/7/76/1k_Grain_Noise.png');
-    animation: noise-jitter 0.2s steps(4) infinite;
+.scary-loader-content.awakening-content {
+    position: relative;
+    z-index: 10005;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 85px !important;
+    /* Perfect gap ~35px directly below the blood tear lower tips */
+    padding: 20px;
 }
 
-@keyframes noise-jitter {
-    0% {
-        transform: translate(0, 0);
-    }
+.lower-text-position {
+    margin-top: 45px !important;
+    z-index: 10020;
+}
 
-    25% {
-        transform: translate(-1%, -1%);
+/* FLOATING HORROR KANJI IN EMPTY SCREEN SPACES */
+.floating-kanji-bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 10003;
+    overflow: hidden;
+}
+
+.kanji-particle {
+    position: absolute;
+    font-family: 'Noto Serif JP', serif;
+    color: rgba(255, 0, 51, 0.18);
+    font-size: 85px;
+    font-weight: 700;
+    text-shadow: 0 0 20px rgba(255, 0, 51, 0.4);
+    animation: kanji-float-drift 12s infinite alternate ease-in-out;
+}
+
+.kanji-particle.p1 {
+    top: 12%;
+    left: 10%;
+    font-size: 110px;
+    animation-duration: 14s;
+}
+
+.kanji-particle.p2 {
+    top: 70%;
+    left: 8%;
+    font-size: 90px;
+    animation-duration: 11s;
+}
+
+.kanji-particle.p3 {
+    top: 15%;
+    right: 12%;
+    font-size: 105px;
+    animation-duration: 13s;
+}
+
+.kanji-particle.p4 {
+    top: 72%;
+    right: 10%;
+    font-size: 95px;
+    animation-duration: 15s;
+}
+
+.kanji-particle.p5 {
+    top: 40%;
+    left: 5%;
+    font-size: 75px;
+    animation-duration: 10s;
+}
+
+.kanji-particle.p6 {
+    top: 42%;
+    right: 6%;
+    font-size: 80px;
+    animation-duration: 12s;
+}
+
+.kanji-particle.p7 {
+    bottom: 8%;
+    left: 30%;
+    font-size: 70px;
+    animation-duration: 9s;
+}
+
+.kanji-particle.p8 {
+    bottom: 6%;
+    right: 32%;
+    font-size: 70px;
+    animation-duration: 11s;
+}
+
+@keyframes kanji-float-drift {
+    0% {
+        transform: translateY(0) scale(1) rotate(-3deg);
+        opacity: 0.12;
     }
 
     50% {
-        transform: translate(1%, 1%);
-    }
-
-    75% {
-        transform: translate(-1%, 1%);
+        transform: translateY(-25px) scale(1.1) rotate(4deg);
+        opacity: 0.25;
+        filter: blur(0.5px);
     }
 
     100% {
-        transform: translate(1%, -1%);
+        transform: translateY(15px) scale(0.95) rotate(-2deg);
+        opacity: 0.12;
     }
 }
 
-.creeping-veins-container {
+/* CREEPING SHADOW CLAWS LAYER */
+.shadow-claws-layer {
     position: absolute;
     inset: 0;
-    z-index: 10002;
     pointer-events: none;
-    transition: opacity 2s ease;
+    z-index: 10002;
+    background:
+        radial-gradient(ellipse at top left, rgba(128, 0, 20, 0.25) 0%, transparent 60%),
+        radial-gradient(ellipse at bottom right, rgba(128, 0, 20, 0.25) 0%, transparent 60%);
+    animation: claw-creep-fade 6s ease-in-out infinite alternate;
 }
 
-.creeping-veins-container svg {
-    width: 100%;
-    height: 100%;
-    filter: blur(1px) drop-shadow(0 0 10px #ff0000);
+@keyframes claw-creep-fade {
+    0% {
+        opacity: 0.4;
+    }
+
+    100% {
+        opacity: 0.85;
+    }
+}
+
+/* AWAKENED ANIME EYES VIEWPORT */
+.awakened-eyes-viewport {
+    position: relative;
+    width: 320px;
+    height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.4s ease;
+}
+
+.anime-eyes-pair {
+    display: flex;
+    gap: 70px;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.anime-eyes-pair.eyes-closed-slit .anime-eye-socket {
+    height: 6px;
+    background: #33000a;
+    border-radius: 50% / 100%;
+    box-shadow: 0 0 15px #ff0033;
+    overflow: hidden;
+}
+
+.anime-eyes-pair.eyes-closed-slit .scary-twitch-pupil {
+    opacity: 0;
+}
+
+.anime-eyes-pair.eyes-peeled-open .anime-eye-socket {
+    animation: eye-peel-open 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes eye-peel-open {
+    0% {
+        height: 6px;
+        background: #33000a;
+        filter: brightness(0.5);
+    }
+
+    40% {
+        height: 125px;
+        background: radial-gradient(ellipse at center, #ffffff 0%, #ffe6eb 40%, #cc99a3 80%, #1a0005 100%);
+        filter: brightness(1.8);
+    }
+
+    100% {
+        height: 115px;
+        background: radial-gradient(ellipse at center, #ffffff 0%, #ffe6eb 40%, #cc99a3 80%, #1a0005 100%);
+        filter: brightness(1);
+    }
+}
+
+/* ANIME EYE SOCKET & CORNER-HOLDING PUPIL */
+.anime-eye-socket {
+    position: relative;
+    width: 95px;
+    height: 115px;
+    background: radial-gradient(ellipse at center, #ffffff 0%, #ffe6eb 40%, #cc99a3 80%, #1a0005 100%);
+    border-radius: 50% 50% 45% 45% / 60% 60% 40% 40%;
+    box-shadow:
+        0 0 35px rgba(255, 0, 51, 0.8),
+        0 0 70px rgba(255, 0, 51, 0.4),
+        inset 0 0 18px #660011;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+    /* Allow SVG blood tears to stream down outside bottom eyelid */
+}
+
+.scary-twitch-pupil.corner-hold {
+    position: relative;
+    width: 44px;
+    height: 62px;
+    background: radial-gradient(ellipse at center, #ff0033 0%, #99001f 60%, #33000a 100%);
+    border-radius: 50%;
+    box-shadow: 0 0 25px #ff0033, inset 0 0 10px #ff99aa;
+    animation: corner-hold-pupil-snap 4s infinite cubic-bezier(0.85, 0, 0.15, 1);
+}
+
+.scary-twitch-pupil::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 8px;
+    height: 44px;
+    background: #000000;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    box-shadow: 0 0 8px #000;
+}
+
+@keyframes corner-hold-pupil-snap {
+
+    0%,
+    15% {
+        transform: translate(0, 0);
+    }
+
+    /* Stare Center */
+    20%,
+    35% {
+        transform: translate(-22px, -18px);
+    }
+
+    /* Snap Far Top-Left & HOLD */
+    40%,
+    55% {
+        transform: translate(22px, 16px);
+    }
+
+    /* Snap Far Bottom-Right & HOLD */
+    60%,
+    75% {
+        transform: translate(22px, -18px);
+    }
+
+    /* Snap Far Top-Right & HOLD */
+    80%,
+    95% {
+        transform: translate(-22px, 18px);
+    }
+
+    /* Snap Far Bottom-Left & HOLD */
+    100% {
+        transform: translate(0, 0);
+    }
+}
+
+/* REALISTIC ANCHORED SVG BLOOD TEARS */
+.eye-blood-tear-svg {
+    position: absolute;
+    top: 80%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 38px;
+    height: 180px;
+    overflow: visible;
+    pointer-events: none;
+    z-index: 25;
+    filter: drop-shadow(0 0 12px #ff0033);
+    animation: blood-tear-grow 2.5s ease-in-out infinite;
+}
+
+.anime-eye-socket.right .eye-blood-tear-svg {
+    animation-delay: 0.4s;
+}
+
+@keyframes blood-tear-grow {
+    0% {
+        transform: translateX(-50%) scaleY(0);
+        opacity: 0;
+        transform-origin: top center;
+    }
+
+    25% {
+        opacity: 1;
+    }
+
+    80% {
+        transform: translateX(-50%) scaleY(1);
+        opacity: 0.95;
+        transform-origin: top center;
+    }
+
+    100% {
+        transform: translateX(-50%) scaleY(1.1);
+        opacity: 0;
+        transform-origin: top center;
+    }
+}
+
+.blood-tear-stream.left-tear {
+    left: 40%;
+    height: 160px;
+}
+
+.blood-tear-stream.right-tear {
+    right: 40%;
+    height: 180px;
+    animation-delay: 0.4s;
+}
+
+@keyframes blood-tear-drip {
+    0% {
+        height: 0px;
+        opacity: 0;
+    }
+
+    30% {
+        opacity: 0.9;
+    }
+
+    80% {
+        height: 180px;
+        opacity: 0.95;
+    }
+
+    100% {
+        height: 210px;
+        opacity: 0;
+    }
+}
+
+.scary-horror-jp-text {
+    font-family: 'Noto Serif JP', 'Cinzel', serif;
+    color: #ff0033;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    font-style: italic;
+    transform: skewX(-5deg);
+    text-shadow:
+        -3px 0 0 #800014,
+        3px 0 0 #ff3355,
+        0 0 15px rgba(255, 0, 51, 0.9),
+        0 0 35px rgba(255, 0, 51, 0.5),
+        2px 2px 4px #000;
+    animation:
+        horror-text-snap-in 0.25s cubic-bezier(0.1, 0.9, 0.2, 1) forwards,
+        text-creep-tremble 1.5s ease-in-out infinite alternate 0.25s;
+}
+
+@keyframes horror-text-snap-in {
+    0% {
+        opacity: 0;
+        transform: skewX(25deg) scaleX(1.4) translateY(-10px);
+        filter: brightness(3) contrast(2);
+        text-shadow: -15px 0 0 #ff0000, 15px 0 0 #00ffff;
+    }
+
+    40% {
+        opacity: 1;
+        transform: skewX(-15deg) scaleX(0.9) translateY(4px);
+        filter: brightness(1.8);
+        text-shadow: 8px 0 0 #ff0033, -8px 0 0 #44000a;
+    }
+
+    70% {
+        transform: skewX(-3deg) scaleX(1.05);
+        filter: brightness(1.2);
+    }
+
+    100% {
+        opacity: 1;
+        transform: skewX(-5deg) scaleX(1);
+        filter: brightness(1);
+    }
+}
+
+@keyframes text-creep-tremble {
+    0% {
+        transform: skewX(-5deg) translate(0, 0);
+        text-shadow: -3px 0 0 #800014, 3px 0 0 #ff3355, 0 0 15px rgba(255, 0, 51, 0.9);
+    }
+
+    25% {
+        transform: skewX(-5.5deg) translate(-1px, 1px);
+    }
+
+    50% {
+        transform: skewX(-4.5deg) translate(1px, -1px);
+        text-shadow: -4px 0 0 #99001f, 4px 0 0 #ff5577, 0 0 25px rgba(255, 0, 51, 1);
+    }
+
+    75% {
+        transform: skewX(-5.2deg) translate(-1px, -1px);
+    }
+
+    100% {
+        transform: skewX(-5deg) translate(0, 0);
+        text-shadow: -3px 0 0 #800014, 3px 0 0 #ff3355, 0 0 15px rgba(255, 0, 51, 0.9);
+    }
+}
+
+@keyframes text-pulse-soft {
+    from {
+        opacity: 0.85;
+        transform: translateY(0);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(-2px);
+    }
 }
 
 .scary-loader-content {
@@ -755,30 +1202,21 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 80px;
-    /* More space to avoid 'ugly' clutter */
-    z-index: 102;
+    gap: 60px;
+    z-index: 10005;
     padding: 20px;
 }
 
-.heartbulb {
-    animation: heart-heavy-pulse 1.8s ease-in-out infinite;
-    filter: drop-shadow(0 0 15px rgba(220, 38, 38, 0.4));
-}
-
 .glitch-text {
-    font-family: 'Cinzel', serif;
-    color: #dc2626;
-    font-size: 48px;
-    letter-spacing: 12px;
-    text-transform: uppercase;
+    font-family: 'Noto Serif JP', 'Cinzel', serif;
+    color: #ff2244;
+    letter-spacing: 0.15em;
     margin: 0;
-    transition: all 0.4s ease;
-    animation: extreme-vibration 0.1s infinite;
+    transition: all 0.3s ease;
     text-shadow:
         3px 3px 0px rgba(0, 0, 0, 1),
-        -2px -2px 0px rgba(220, 38, 38, 0.5),
-        4px 0px 1px rgba(0, 255, 255, 0.2);
+        -2px -2px 0px rgba(255, 0, 51, 0.7),
+        3px 0px 4px rgba(0, 255, 255, 0.4);
 }
 
 .text-darling-en {
@@ -1421,23 +1859,28 @@
         transform: translate(0, 0) rotate(0deg);
         filter: none;
     }
+
     10% {
         transform: translate(-2px, 1px) rotate(-1deg);
         filter: hue-rotate(90deg) brightness(1.5);
     }
+
     20% {
         transform: translate(3px, -2px) rotate(2deg);
         filter: hue-rotate(-45deg) invert(0.2);
     }
+
     30% {
         transform: translate(-1px, 2px) rotate(-3deg);
         clip-path: polygon(0% 0%, 100% 0%, 100% 70%, 0% 100%);
     }
+
     40% {
         transform: translate(5px, 20px) rotate(15deg);
         opacity: 0.8;
         clip-path: polygon(0% 20%, 80% 0%, 100% 100%, 20% 80%);
     }
+
     100% {
         transform: translate(10px, 110vh) rotate(120deg);
         opacity: 0;
@@ -1447,7 +1890,8 @@
 .scary-text-overlay {
     position: fixed;
     inset: 0;
-    z-index: 1; /* Behind avatar, in front of background gradient */
+    z-index: 1;
+    /* Behind avatar, in front of background gradient */
     pointer-events: none;
     overflow: hidden;
     background: radial-gradient(circle at 50% 50%, transparent 0%, rgba(10, 0, 0, 0.4) 100%);
@@ -1473,17 +1917,45 @@
 }
 
 @keyframes scary-fade-in {
-    from { opacity: 0; transform: scale(1.2); filter: blur(20px); }
-    to { opacity: 1; transform: scale(1); filter: blur(2px); }
+    from {
+        opacity: 0;
+        transform: scale(1.2);
+        filter: blur(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+        filter: blur(2px);
+    }
 }
 
 @keyframes scary-glitch-cycle {
-    0% { transform: translate(0); text-shadow: -2px 0 red, 2px 0 blue; }
-    20% { transform: translate(-2px, 2px); }
-    40% { transform: translate(-2px, -2px); text-shadow: 2px 0 red, -2px 0 blue; }
-    60% { transform: translate(2px, 2px); }
-    80% { transform: translate(2px, -2px); }
-    100% { transform: translate(0); }
+    0% {
+        transform: translate(0);
+        text-shadow: -2px 0 red, 2px 0 blue;
+    }
+
+    20% {
+        transform: translate(-2px, 2px);
+    }
+
+    40% {
+        transform: translate(-2px, -2px);
+        text-shadow: 2px 0 red, -2px 0 blue;
+    }
+
+    60% {
+        transform: translate(2px, 2px);
+    }
+
+    80% {
+        transform: translate(2px, -2px);
+    }
+
+    100% {
+        transform: translate(0);
+    }
 }
 
 
@@ -1495,11 +1967,30 @@
 }
 
 @keyframes scary-shudder {
-    0% { transform: translate(0,0) skew(0deg); opacity: 0.8; }
-    25% { transform: translate(-5px, 2px) skew(2deg); opacity: 0.9; }
-    50% { transform: translate(5px, -2px) skew(-3deg); color: #7f1d1d; }
-    75% { transform: translate(-3px, -3px) skew(1deg); opacity: 0.5; }
-    100% { transform: translate(3px, 3px) skew(0deg); opacity: 0.8; }
+    0% {
+        transform: translate(0, 0) skew(0deg);
+        opacity: 0.8;
+    }
+
+    25% {
+        transform: translate(-5px, 2px) skew(2deg);
+        opacity: 0.9;
+    }
+
+    50% {
+        transform: translate(5px, -2px) skew(-3deg);
+        color: #7f1d1d;
+    }
+
+    75% {
+        transform: translate(-3px, -3px) skew(1deg);
+        opacity: 0.5;
+    }
+
+    100% {
+        transform: translate(3px, 3px) skew(0deg);
+        opacity: 0.8;
+    }
 }
 
 .glitch-scary {
@@ -1521,10 +2012,27 @@
 }
 
 @keyframes screen-impact {
-    10%, 90% { transform: translate3d(-1px, 0, 0); }
-    20%, 80% { transform: translate3d(2px, 0, 0); }
-    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-    40%, 60% { transform: translate3d(4px, 0, 0); }
+
+    10%,
+    90% {
+        transform: translate3d(-1px, 0, 0);
+    }
+
+    20%,
+    80% {
+        transform: translate3d(2px, 0, 0);
+    }
+
+    30%,
+    50%,
+    70% {
+        transform: translate3d(-4px, 0, 0);
+    }
+
+    40%,
+    60% {
+        transform: translate3d(4px, 0, 0);
+    }
 }
 
 .back-btn.broken {
@@ -1538,19 +2046,23 @@
         transform: scale(1);
         filter: none;
     }
+
     5% {
         transform: scale(1.4);
         filter: drop-shadow(0 0 15px #f00) brightness(2);
         color: #fff;
     }
+
     15% {
         transform: scale(1.2) translate(-5px, 5px) rotate(-10deg);
         clip-path: polygon(0 0, 100% 0, 80% 100%, 0 80%);
     }
+
     25% {
         transform: scale(1.1) translate(10px, 15px) rotate(20deg);
         clip-path: polygon(20% 0, 100% 20%, 70% 100%, 0 70%);
     }
+
     100% {
         transform: translate(20px, 120vh) rotate(360deg);
         opacity: 0;
@@ -1565,21 +2077,26 @@
         transform: scale(1);
         filter: none;
     }
+
     10% {
-        transform: scale(2.0); /* Even larger for impact */
+        transform: scale(2.0);
+        /* Even larger for impact */
         filter: drop-shadow(0 0 30px #f00) brightness(3);
         color: #fff;
         text-shadow: 0 0 10px #f00;
         background: rgba(255, 0, 0, 0.4);
     }
+
     20% {
         transform: scale(1.5) translate(-10px, 10px) rotate(-15deg);
         clip-path: polygon(0 0, 100% 0, 80% 100%, 0 80%);
     }
+
     30% {
         transform: scale(1.3) translate(15px, 25px) rotate(25deg);
         clip-path: polygon(15% 0, 100% 15%, 70% 100%, 0 85%);
     }
+
     100% {
         transform: translate(30px, 130vh) rotate(420deg);
         opacity: 0;
@@ -1601,9 +2118,20 @@
 }
 
 @keyframes button-glitch-flicker {
-    0% { opacity: 1; transform: translate(0,0); }
-    50% { opacity: 0.2; transform: translate(-2px, 1px); }
-    100% { opacity: 0.8; transform: translate(2px, -1px); }
+    0% {
+        opacity: 1;
+        transform: translate(0, 0);
+    }
+
+    50% {
+        opacity: 0.2;
+        transform: translate(-2px, 1px);
+    }
+
+    100% {
+        opacity: 0.8;
+        transform: translate(2px, -1px);
+    }
 }
 
 .back-btn.restoring {
@@ -1619,10 +2147,12 @@
         opacity: 0;
         filter: drop-shadow(0 0 20px #f00);
     }
+
     30% {
         opacity: 1;
         filter: drop-shadow(0 0 15px #f00) brightness(1.5);
     }
+
     100% {
         transform: translate(0, 0) rotate(0deg);
         opacity: 1;
@@ -1644,11 +2174,29 @@
 }
 
 @keyframes button-glitch-heavy {
-    0% { transform: translate(-3px, 2px) skew(5deg); filter: hue-rotate(90deg); }
-    25% { transform: translate(3px, -2px) skew(-5deg); filter: hue-rotate(0deg); }
-    50% { transform: translate(-1px, -3px) skew(2deg) scale(1.1); filter: brightness(2); }
-    75% { transform: translate(2px, 3px) skew(-2deg); filter: contrast(150%); }
-    100% { transform: translate(0, 0); }
+    0% {
+        transform: translate(-3px, 2px) skew(5deg);
+        filter: hue-rotate(90deg);
+    }
+
+    25% {
+        transform: translate(3px, -2px) skew(-5deg);
+        filter: hue-rotate(0deg);
+    }
+
+    50% {
+        transform: translate(-1px, -3px) skew(2deg) scale(1.1);
+        filter: brightness(2);
+    }
+
+    75% {
+        transform: translate(2px, 3px) skew(-2deg);
+        filter: contrast(150%);
+    }
+
+    100% {
+        transform: translate(0, 0);
+    }
 }
 
 .back-btn.plea-state {
@@ -1659,9 +2207,17 @@
 }
 
 @keyframes button-jitter-light {
-    0% { transform: translate(-0.5px, 0.5px); }
-    50% { transform: translate(0.5px, -0.5px); }
-    100% { transform: translate(0,0); }
+    0% {
+        transform: translate(-0.5px, 0.5px);
+    }
+
+    50% {
+        transform: translate(0.5px, -0.5px);
+    }
+
+    100% {
+        transform: translate(0, 0);
+    }
 }
 
 
@@ -1709,15 +2265,26 @@
     width: 200vw;
     height: 200vh;
     transform: translate(-50%, -50%);
-    background: radial-gradient(circle, rgba(255,0,0,0.2) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(255, 0, 0, 0.2) 0%, transparent 70%);
     animation: void-pulse 1.5s infinite ease-in-out;
     pointer-events: none;
 }
 
 @keyframes void-pulse {
-    0% { opacity: 0.3; transform: translate(-50%, -50%) scale(0.8); }
-    50% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.2); }
-    100% { opacity: 0.3; transform: translate(-50%, -50%) scale(0.8); }
+    0% {
+        opacity: 0.3;
+        transform: translate(-50%, -50%) scale(0.8);
+    }
+
+    50% {
+        opacity: 0.7;
+        transform: translate(-50%, -50%) scale(1.2);
+    }
+
+    100% {
+        opacity: 0.3;
+        transform: translate(-50%, -50%) scale(0.8);
+    }
 }
 
 .recovery-text {
@@ -1779,8 +2346,15 @@
 }
 
 @keyframes slideUp {
-    from { transform: translateX(-50%) translateY(20px); opacity: 0; }
-    to { transform: translateX(-50%) translateY(0); opacity: 1; }
+    from {
+        transform: translateX(-50%) translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+    }
 }
 
 .janken-choices {
@@ -1826,9 +2400,19 @@
     letter-spacing: 1px;
 }
 
-.result-text.won { color: #ff66aa; } /* Reina Won */
-.result-text.lost { color: #66ffaa; } /* Player Won */
-.result-text.tied { color: #66aaff; }
+.result-text.won {
+    color: #ff66aa;
+}
+
+/* Reina Won */
+.result-text.lost {
+    color: #66ffaa;
+}
+
+/* Player Won */
+.result-text.tied {
+    color: #66aaff;
+}
 
 
 /* Enhanced Game Styles */
@@ -1914,8 +2498,15 @@
 }
 
 @keyframes pulse {
-    from { transform: scale(0.95); opacity: 0.8; }
-    to { transform: scale(1.05); opacity: 1; }
+    from {
+        transform: scale(0.95);
+        opacity: 0.8;
+    }
+
+    to {
+        transform: scale(1.05);
+        opacity: 1;
+    }
 }
 
 .ttt-grid {
@@ -1946,7 +2537,9 @@
     cursor: default;
 }
 
-.ttt-cell:disabled { opacity: 0.8; }
+.ttt-cell:disabled {
+    opacity: 0.8;
+}
 
 /* Closeness Meter */
 .reina-closeness-container {
@@ -1998,10 +2591,202 @@
 }
 
 @keyframes heartBeat {
-    0% { transform: scale(1); }
-    15% { transform: scale(1.3); }
-    30% { transform: scale(1); }
-    45% { transform: scale(1.15); }
-    60% { transform: scale(1); }
+    0% {
+        transform: scale(1);
+    }
+
+    15% {
+        transform: scale(1.3);
+    }
+
+    30% {
+        transform: scale(1);
+    }
+
+    45% {
+        transform: scale(1.15);
+    }
+
+    60% {
+        transform: scale(1);
+    }
 }
 
+/* ================================================================
+   Dance Cinematic Mode — Hides all UI elements & dark vignettes during dance
+   ================================================================ */
+.reina-page.dance-cinematic-mode {
+    background: radial-gradient(ellipse at 50% 50%, #4a1532 0%, #200414 50%, #080105 100%) !important;
+    transition: background 2s ease-in-out !important;
+    /* smooth slower transition */
+}
+
+/* Beautiful Stage Background overlay that fades in during dance */
+.dance-stage-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0;
+    transition: opacity 2s ease-in-out;
+    background:
+        radial-gradient(circle at 20% 80%, rgba(255, 105, 180, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 80% 20%, rgba(147, 112, 219, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 50% 100%, rgba(255, 20, 147, 0.2) 0%, transparent 50%);
+}
+
+.reina-page.dance-cinematic-mode .dance-stage-bg {
+    opacity: 1;
+}
+
+/* Dance Exit Cross Button */
+.dance-exit-btn {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    z-index: 100;
+    pointer-events: auto;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: rgba(255, 105, 180, 0.25);
+    border: 2px solid rgba(255, 182, 193, 0.6);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 0 15px rgba(255, 105, 180, 0.4);
+}
+
+.dance-exit-btn:hover {
+    transform: scale(1.18);
+    background: rgba(255, 20, 147, 0.85);
+    border-color: #ffffff;
+    box-shadow: 0 0 25px rgba(255, 20, 147, 0.9), 0 0 45px rgba(255, 105, 180, 0.6);
+}
+
+/* Container for animated positioning */
+.neon-shape-container {
+    position: absolute;
+    bottom: -10%;
+    z-index: 5;
+    pointer-events: none;
+    will-change: transform, opacity;
+}
+
+/* Base floating animations */
+.anim-cw {
+    animation: floatSakuraCW linear infinite;
+}
+
+.anim-ccw {
+    animation: floatSakuraCCW linear infinite;
+}
+
+@keyframes floatSakuraCW {
+    0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 0.9;
+    }
+
+    90% {
+        opacity: 0.9;
+    }
+
+    100% {
+        transform: translateY(-120vh) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+@keyframes floatSakuraCCW {
+    0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 0.9;
+    }
+
+    90% {
+        opacity: 0.9;
+    }
+
+    100% {
+        transform: translateY(-120vh) rotate(-360deg);
+        opacity: 0;
+    }
+}
+
+/* Beautiful Neon Sakura Petal using pure CSS border-radius tricks */
+.shape-sakura {
+    width: 20px;
+    height: 20px;
+    background: #ff7eb3;
+    border-radius: 0 50% 50% 50%;
+    transform: rotate(45deg);
+    box-shadow: 0 0 10px #ff7eb3, 0 0 25px #ff2a85;
+    will-change: transform;
+}
+
+/* Glowing Neon Heart Shape */
+.shape-heart {
+    position: relative;
+    width: 14px;
+    height: 14px;
+    background: #ff3377;
+    transform: rotate(45deg);
+    box-shadow: 0 0 10px #ff66aa, 0 0 22px #ff0055;
+    will-change: transform;
+}
+
+.shape-heart::before,
+.shape-heart::after {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    background: #ff3377;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #ff66aa;
+}
+
+.shape-heart::before {
+    left: -7px;
+    top: 0;
+}
+
+.shape-heart::after {
+    top: -7px;
+    left: 0;
+}
+
+.reina-page.dance-cinematic-mode .reina-top-bar,
+.reina-page.dance-cinematic-mode .reina-closeness-container,
+.reina-page.dance-cinematic-mode .reina-bottom-input,
+.reina-page.dance-cinematic-mode .reina-bgm-btn,
+.reina-page.dance-cinematic-mode .reina-mute-btn,
+.reina-page.dance-cinematic-mode .reina-anim-toggle,
+.reina-page.dance-cinematic-mode .reina-speech-bubble,
+.reina-page.dance-cinematic-mode .reina-thought-bubble,
+.reina-page.dance-cinematic-mode .reina-speaking-badge,
+.reina-page.dance-cinematic-mode .reina-anim-picker,
+.reina-page.dance-cinematic-mode .reina-game-btn,
+.reina-page.dance-cinematic-mode .reina-janken-panel,
+.reina-page.dance-cinematic-mode .reina-vignette-bottom,
+.reina-page.dance-cinematic-mode .reina-vignette-top,
+.reina-page.dance-cinematic-mode .reina-vignette-left,
+.reina-page.dance-cinematic-mode .reina-vignette-right {
+    display: none !important;
+}

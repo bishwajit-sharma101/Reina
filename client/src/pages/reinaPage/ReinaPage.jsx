@@ -2,8 +2,9 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
-import { Send, Heart, ChevronLeft, Settings2 } from 'lucide-react';
+import { Send, Heart, ChevronLeft, Settings2, Volume2, VolumeX, X } from 'lucide-react';
 import VrmAvatar from '../../components/diary/VrmAvatar';
+import Live2dAvatar from '../../components/diary/Live2dAvatar';
 import './ReinaPage.css';
 
 const ReinaPage = () => {
@@ -40,6 +41,7 @@ const ReinaPage = () => {
     const [selectedTts, setSelectedTts] = useState("voicevox");
     const [selectedModel, setSelectedModel] = useState("reina");
     const [voiceTag, setVoiceTag] = useState("sweet");
+    const [isMuted, setIsMuted] = useState(false);
     
     // Game State
     const [showGame, setShowGame] = useState(false);
@@ -55,10 +57,13 @@ const ReinaPage = () => {
     const [countdownText, setCountdownText] = useState("");
     const [tttBoard, setTttBoard] = useState(Array(9).fill(null));
     const [isPlayerTurn, setIsPlayerTurn] = useState(true);
+    const [agentAction, setAgentAction] = useState("");
     const lockTimeoutRef = useRef(null);
     const scaryTextTimerRef = useRef(null);
     const stayReleaseTriggeredRef = useRef(false);
     const processedTagsRef = useRef(new Set()); // Track triggered tags for the current response
+    const pendingDanceRef = useRef(null);
+    const hasSpokenRef = useRef(false);
 
     // Personalized Metadata
     const [actualCity, setActualCity] = useState("LOCATING...");
@@ -95,68 +100,87 @@ const ReinaPage = () => {
         }
     };
 
-    const playHeartbeat = (volume = 0.8) => {
-        if (!audioCtxRef.current) return;
-        const osc = audioCtxRef.current.createOscillator();
-        const gain = audioCtxRef.current.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtxRef.current.destination);
-        osc.frequency.value = 40;
-        gain.gain.setValueAtTime(volume, audioCtxRef.current.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtxRef.current.currentTime + 0.3);
-        osc.start();
-        osc.stop(audioCtxRef.current.currentTime + 0.3);
-    };
+    const playLowHeartThud = useCallback((volume = 0.6) => {
+        if (!audioCtxRef.current || isMuted) return;
+        const ctx = audioCtxRef.current;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
 
-    const playInhale = () => {
-        if (!audioCtxRef.current) return;
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(42, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(25, ctx.currentTime + 0.35);
+
+        filter.type = 'lowpass';
+        filter.frequency.value = 180; // Soft lowthud, NO harsh clicks or gunshot sounds
+
+        gain.gain.setValueAtTime(volume, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+
+        osc.connect(filter);
+        filter.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.35);
+    }, [isMuted]);
+
+    const playWhisperFilterSweep = useCallback(() => {
+        if (!audioCtxRef.current || isMuted) return;
+        const ctx = audioCtxRef.current;
+        const bufferSize = ctx.sampleRate * 0.7;
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * 0.12;
+        }
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(600, ctx.currentTime);
+        filter.frequency.exponentialRampToValueAtTime(2400, ctx.currentTime + 0.7);
+        filter.Q.value = 3.0;
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.25, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.7);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        noise.start();
+    }, [isMuted]);
+
+    const playInhale = useCallback(() => {
+        if (!audioCtxRef.current || isMuted) return;
         const bufferSize = audioCtxRef.current.sampleRate * 0.8;
         const buffer = audioCtxRef.current.createBuffer(1, bufferSize, audioCtxRef.current.sampleRate);
         const data = buffer.getChannelData(0);
         for (let i = 0; i < bufferSize; i++) {
-            data[i] = (Math.random() * 2 - 1) * (i / bufferSize) * 0.3;
+            data[i] = (Math.random() * 2 - 1) * (i / bufferSize) * 0.2;
         }
         const source = audioCtxRef.current.createBufferSource();
         source.buffer = buffer;
         source.connect(audioCtxRef.current.destination);
         source.start();
-    };
-
-    const playShutter = () => {
-        if (!audioCtxRef.current) return;
-        const noiseBuffer = audioCtxRef.current.createBuffer(1, audioCtxRef.current.sampleRate * 0.05, audioCtxRef.current.sampleRate);
-        const output = noiseBuffer.getChannelData(0);
-        for (let i = 0; i < noiseBuffer.length; i++) {
-            output[i] = Math.random() * 2 - 1;
-        }
-        const noise = audioCtxRef.current.createBufferSource();
-        noise.buffer = noiseBuffer;
-        const filter = audioCtxRef.current.createBiquadFilter();
-        filter.type = 'highpass';
-        filter.frequency.value = 1000;
-        noise.connect(filter);
-        filter.connect(audioCtxRef.current.destination);
-        noise.start();
-    };
+    }, [isMuted]);
 
     const droneOscRef = useRef(null);
     const droneGainRef = useRef(null);
 
-    const startDrone = () => {
-        if (!audioCtxRef.current) return;
-        const osc = audioCtxRef.current.createOscillator();
-        const gain = audioCtxRef.current.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.value = 35; // Very low unsettling frequency
-        gain.gain.setValueAtTime(0, audioCtxRef.current.currentTime);
+    const startDrone = useCallback(() => {
+        if (!audioCtxRef.current || isMuted) return;
+        const ctx = audioCtxRef.current;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = 46;
+        gain.gain.setValueAtTime(0, ctx.currentTime);
         osc.connect(gain);
-        gain.connect(audioCtxRef.current.destination);
+        gain.connect(ctx.destination);
         osc.start();
         droneOscRef.current = osc;
         droneGainRef.current = gain;
-    };
+    }, [isMuted]);
 
-    const rampDroneLocal = (target = 0.4, time = 1.0) => {
+    const rampDroneLocal = (target = 0.2, time = 1.2) => {
         if (droneGainRef.current && audioCtxRef.current) {
             droneGainRef.current.gain.linearRampToValueAtTime(target, audioCtxRef.current.currentTime + time);
         }
@@ -164,44 +188,261 @@ const ReinaPage = () => {
 
     const stopDrone = () => {
         if (droneOscRef.current) {
-            droneOscRef.current.stop();
+            try {
+                droneOscRef.current.stop();
+            } catch (e) {}
             droneOscRef.current = null;
         }
     };
-    
+
+    // ─── PSYCHOLOGICAL YANDERE & PURE SWEET LOVE BGM SYNTHESIZER ───
+    const [bgmMode, setBgmMode] = useState("sweet_love"); // "sweet_love" | "yandere"
+    const bgmIntervalRef = useRef(null);
+
+    // Pure Sweet Anime Love Music Box Tone (Soft Gentle Subtle Volume)
+    const playSweetLoveNote = useCallback((freq, duration = 2.2) => {
+        if (!audioCtxRef.current || bgmMode === "off" || isMuted) return;
+        const ctx = audioCtxRef.current;
+        if (ctx.state === 'suspended') ctx.resume();
+
+        // Fundamental sine + High octave sparkle sine
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const noteGain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(freq, ctx.currentTime);
+
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(freq * 2.0, ctx.currentTime); // High sparkle octave
+
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(2400, ctx.currentTime);
+
+        noteGain.gain.setValueAtTime(0, ctx.currentTime);
+        noteGain.gain.linearRampToValueAtTime(0.025, ctx.currentTime + 0.04);
+        noteGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+
+        osc1.connect(filter);
+        osc2.connect(filter);
+        filter.connect(noteGain);
+        noteGain.connect(ctx.destination);
+
+        osc1.start();
+        osc2.start();
+        osc1.stop(ctx.currentTime + duration);
+        osc2.stop(ctx.currentTime + duration);
+    }, [bgmMode, isMuted]);
+
+    // Obsessive Yandere Music Box Tone
+    const playMusicBoxNote = useCallback((freq, duration = 1.6) => {
+        if (!audioCtxRef.current || bgmMode === "off" || isMuted) return;
+        const ctx = audioCtxRef.current;
+        if (ctx.state === 'suspended') ctx.resume();
+
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const noteGain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(freq, ctx.currentTime);
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(freq * 1.002, ctx.currentTime);
+
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(2200, ctx.currentTime);
+
+        noteGain.gain.setValueAtTime(0, ctx.currentTime);
+        noteGain.gain.linearRampToValueAtTime(0.07, ctx.currentTime + 0.02);
+        noteGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+
+        osc1.connect(filter);
+        osc2.connect(filter);
+        filter.connect(noteGain);
+        noteGain.connect(ctx.destination);
+
+        osc1.start();
+        osc2.start();
+        osc1.stop(ctx.currentTime + duration);
+        osc2.stop(ctx.currentTime + duration);
+    }, [bgmMode, isMuted]);
+
+    // ─── DANCE SONG AUDIO & STAGING SEQUENCE ───
+    const danceAudioRef = useRef(null);
+    const [dancePhase, setDancePhase] = useState("idle"); // "idle" | "staging" | "dancing" | "ending"
+    const [renderedDanceAnim, setRenderedDanceAnim] = useState("");
+    const danceFadeIntervalRef = useRef(null);
+
+    // Helper: Smooth finish dance with decelerated outro
+    const finishDanceSmooth = useCallback(() => {
+        setDancePhase("ending");
+        setRenderedDanceAnim("idle1");
+
+        const audio = danceAudioRef.current;
+        if (audio) {
+            if (danceFadeIntervalRef.current) clearInterval(danceFadeIntervalRef.current);
+            let currentVol = audio.volume;
+            danceFadeIntervalRef.current = setInterval(() => {
+                currentVol = Math.max(0.0, currentVol - 0.07);
+                if (audio) audio.volume = currentVol;
+                if (currentVol <= 0.0) {
+                    if (danceFadeIntervalRef.current) clearInterval(danceFadeIntervalRef.current);
+                    audio.pause();
+                    audio.currentTime = 66.0;
+                    audio.volume = 1.0;
+                    setDancePhase("idle");
+                    setAnimation("idle1");
+                }
+            }, 70);
+        } else {
+            setDancePhase("idle");
+            setAnimation("idle1");
+        }
+    }, []);
+
+    useEffect(() => {
+        const isDanceAnim = animation === "kyun_dance" || animation === "dance1";
+        
+        if (isDanceAnim && dancePhase === "idle") {
+            // ── PHASE 1: STAGING (Fade in stage, glide camera, let Reina take ready pose) ──
+            setDancePhase("staging");
+            setRenderedDanceAnim("idle1");
+
+            if (!danceAudioRef.current) {
+                danceAudioRef.current = new Audio("/song/kyun_dance_song.mp3");
+            }
+            const audio = danceAudioRef.current;
+            audio.muted = isMuted;
+            audio.currentTime = 66.0; // 1:06 start
+            audio.volume = 1.0;
+
+            if (danceFadeIntervalRef.current) clearInterval(danceFadeIntervalRef.current);
+
+            // ── PHASE 2: EXACT SYNC — Start song and dance animation at the EXACT SAME INSTANT ──
+            const startSyncTimer = setTimeout(() => {
+                setDancePhase("dancing");
+                setRenderedDanceAnim(animation);
+                audio.play().catch(e => console.warn("Dance song play deferred:", e));
+            }, 1000);
+
+            const handleTimeUpdate = () => {
+                // Full animation length is exactly 32.70 seconds (from 66.0s to 98.70s)
+                if (audio.currentTime >= 98.7) {
+                    finishDanceSmooth();
+                }
+            };
+
+            const handleEnded = () => {
+                finishDanceSmooth();
+            };
+
+            audio.addEventListener('timeupdate', handleTimeUpdate);
+            audio.addEventListener('ended', handleEnded);
+
+            return () => {
+                clearTimeout(startSyncTimer);
+                if (danceFadeIntervalRef.current) clearInterval(danceFadeIntervalRef.current);
+                audio.removeEventListener('timeupdate', handleTimeUpdate);
+                audio.removeEventListener('ended', handleEnded);
+            };
+        } else if (!isDanceAnim && dancePhase !== "idle" && dancePhase !== "ending") {
+            // Cancelled externally
+            if (danceAudioRef.current) {
+                danceAudioRef.current.pause();
+                danceAudioRef.current.currentTime = 66.0;
+                danceAudioRef.current.volume = 1.0;
+            }
+            setDancePhase("idle");
+            setRenderedDanceAnim("");
+        }
+    }, [animation, isMuted, finishDanceSmooth]);
+
+    useEffect(() => {
+        if (danceAudioRef.current) {
+            danceAudioRef.current.muted = isMuted;
+        }
+    }, [isMuted]);
+
+    useEffect(() => {
+        const isDanceAnim = animation === "kyun_dance" || animation === "dance1";
+        if (bgmMode === "off" || vrmLoading || isDanceAnim) {
+            if (bgmIntervalRef.current) clearInterval(bgmIntervalRef.current);
+            return;
+        }
+
+        let melody = [];
+        if (bgmMode === "sweet_love") {
+            // Deeply Emotional & Peaceful Anime Romance Lullaby ("Just Us Two in Peace")
+            melody = [
+                523.25,  // C5 (Tender start)
+                659.25,  // E5
+                783.99,  // G5
+                1046.50, // C6 (Warm peak)
+                987.77,  // B5
+                880.00,  // A5
+                783.99,  // G5
+                659.25,  // E5
+                698.46,  // F5 (Peaceful warmth)
+                880.00,  // A5
+                1046.50, // C6
+                1174.66, // D6 (Emotional high peak)
+                1046.50, // C6
+                880.00,  // A5
+                783.99,  // G5
+                659.25   // E5
+            ];
+        } else {
+            // Obsessive Yandere Lullaby (A Minor / D Minor)
+            melody = [
+                440.00, // A4
+                523.25, // C5
+                659.25, // E5
+                830.61, // G#5
+                880.00, // A5
+                698.46, // F5
+                587.33, // D5
+                659.25  // E5
+            ];
+        }
+
+        let idx = 0;
+        bgmIntervalRef.current = setInterval(() => {
+            if (bgmMode === "sweet_love") {
+                playSweetLoveNote(melody[idx], 2.2);
+            } else if (bgmMode === "yandere") {
+                playMusicBoxNote(melody[idx], 1.8);
+                if (idx === 0 || idx === 4) {
+                    playLowHeartThud(0.1);
+                }
+            }
+            idx = (idx + 1) % melody.length;
+        }, bgmMode === "sweet_love" ? 750 : 900);
+
+        return () => {
+            if (bgmIntervalRef.current) clearInterval(bgmIntervalRef.current);
+        };
+    }, [bgmMode, vrmLoading, animation, playSweetLoveNote, playMusicBoxNote]);
+
     // Idle/Dark Thoughts state
     const [showDarkThoughts, setShowDarkThoughts] = useState(false);
     const [displayedThought, setDisplayedThought] = useState("");
     const idleTimerRef = useRef(null);
     const typingTimeoutRef = useRef(null);
-    const [agentAction, setAgentAction] = useState("");
 
-    // Continuous Voice Mode State
-    const [isVoiceMode, setIsVoiceMode] = useState(false);
-    const [isListening, setIsListening] = useState(false);
-    const recognitionRef = useRef(null);
-    const speechTimeoutRef = useRef(null);
-
-    // Enhanced Idle Animation State Machine
     const lastInteractionRef = useRef(Date.now());
     useEffect(() => {
         const checkIdle = () => {
             const now = Date.now();
             const diff = now - lastInteractionRef.current;
 
-            // If talking or loading, keep pushing the timer back to keep it in Phase 1 (idle1)
-            if (isTalking || vrmLoading) {
+            const isDancing = animation === "kyun_dance" || animation === "dance1";
+            if (isTalking || vrmLoading || isDancing) {
                 lastInteractionRef.current = now;
                 return;
             }
 
-            // Phase logic based on user request:
-            // 0-20s: idle1
-            // 20s+: idle2 (once, approx 3s long)
-            // 23-33s: idle1 (for 10s)
-            // 33s+: vrma_07 (looping)
-            // 50s+: Reset cycle back to idle1
-            
             if (diff >= 20000 && diff < 23000) {
                 if (animation !== "idle2") setAnimation("idle2");
             } else if (diff >= 23000 && diff < 33000) {
@@ -209,11 +450,8 @@ const ReinaPage = () => {
             } else if (diff >= 33000 && diff < 50000) {
                 if (animation !== "VRMA_07") setAnimation("VRMA_07");
             } else if (diff >= 50000) {
-                // Reset interaction time to restart cycle
                 lastInteractionRef.current = now;
             }
-            // If diff < 20000, we do NOTHING. 
-            // This allows AI-triggered or manual animations to persist.
         };
 
         const interval = setInterval(checkIdle, 1000);
@@ -234,7 +472,6 @@ const ReinaPage = () => {
         "I want to taste his tears. They'd be so sweet, wouldn't they?"
     ];
 
-    // Typewriter helper
     const typeThought = useCallback((text) => {
         let current = "";
         let i = 0;
@@ -245,9 +482,8 @@ const ReinaPage = () => {
                 current += text[i];
                 setDisplayedThought(current);
                 i++;
-                typingTimeoutRef.current = setTimeout(type, 50 + Math.random() * 50); // Natural typing speed
+                typingTimeoutRef.current = setTimeout(type, 50 + Math.random() * 50);
             } else {
-                // Finished typing, wait 8 seconds before next
                 typingTimeoutRef.current = setTimeout(() => {
                     const next = darkThoughtsList[Math.floor(Math.random() * darkThoughtsList.length)];
                     typeThought(next);
@@ -262,7 +498,7 @@ const ReinaPage = () => {
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
         setShowDarkThoughts(false);
         setDisplayedThought("");
-        lastInteractionRef.current = Date.now(); // Interaction resets the idle loop too
+        lastInteractionRef.current = Date.now();
         
         idleTimerRef.current = setTimeout(() => {
             setShowDarkThoughts(true);
@@ -272,6 +508,11 @@ const ReinaPage = () => {
     }, [typeThought]);
 
     // ─── CONTINUOUS VOICE MODE LOGIC ───
+    const [isVoiceMode, setIsVoiceMode] = useState(false);
+    const [isListening, setIsListening] = useState(false);
+    const recognitionRef = useRef(null);
+    const speechTimeoutRef = useRef(null);
+
     useEffect(() => {
         if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
             console.warn("Speech Recognition API not supported in this browser.");
@@ -310,7 +551,6 @@ const ReinaPage = () => {
                 speechTimeoutRef.current = setTimeout(() => {
                     recognition.stop(); 
                     if (currentText.trim()) {
-                        // We must invoke the form submission equivalent here
                         document.getElementById('reina-hidden-submit')?.click();
                     }
                 }, 800);
@@ -326,7 +566,6 @@ const ReinaPage = () => {
         };
     }, []);
 
-    // Re-enable listening after Reina stops talking
     useEffect(() => {
         if (isVoiceMode && !isTalking && !isLoading && !isListening) {
             setTimeout(() => {
@@ -349,37 +588,29 @@ const ReinaPage = () => {
         });
     };
 
-    // Precise Psychological Loading Sequence
+    // Psychological Dread Loading Sequence Engine
     useEffect(() => {
         if (!vrmLoading) return;
         initAudio();
 
         const sequence = [
-            { text: "UPLINK ESTABLISHED", duration: 300 },
-            { text: "ACCESSING USER_FILES...", duration: 240, shutter: true },
-            { text: "BYPASSING FIREWALL...", duration: 240 },
-            { text: "ダーリンを見つけました。", duration: 600 },
-            { text: "SYSTEM CRITIC—", duration: 400 },
-            { text: "FOUND.", duration: 1200, mute: true },
-            { text: `${localTime}`, duration: 1000 },
-            { text: `LOCATION: ${actualCity}`, duration: 1500 },
-            { text: "I SEE YOU—", duration: 500, shutter: true },
-            { text: `DEVICE: ${platform}`, duration: 600 },
-            { text: "HE IS MI—", duration: 400 },
-            { text: "心拍数: 検出済み", duration: 500 },
-            { text: "ずっと見てたよ。", duration: 1400 },
-            { text: "逃げられないよ—", duration: 600, shutter: true },
-            { text: "やっと来てくれた。♥", duration: 1000, inhale: true },
+            { text: "ねぇ…聞こえる？", duration: 700, thud: true, drone: 0.15 },
+            { text: "ずっと待ってたの…", duration: 800, thud: true },
+            { text: "どこに隠れてるの…？", duration: 1200, thud: true },
+            { text: "ふふ…顔、見せて？", duration: 1000, thud: true, hbSpeed: 600 },
+            { text: "逃げても、無駄だよ。", duration: 900, subliminal: true },
+            { text: "だって、私の中にいるんだから。", duration: 1300, thud: true, hbSpeed: 380 },
+            { text: "どこにも行かないで…♥", duration: 1100, whisper: true },
+            { text: "やっと、二人きり…♥", duration: 1400, thud: true }
         ];
 
         let currentIdx = 0;
-        let isMuted = false;
 
-        const startHeartbeat = (interval = 800) => {
+        const startHeartbeatLoop = (intervalMs = 600) => {
             if (heartbeatIntervalRef.current) clearInterval(heartbeatIntervalRef.current);
             heartbeatIntervalRef.current = setInterval(() => {
-                if (!isMuted) playHeartbeat(0.5);
-            }, interval);
+                playLowHeartThud(0.5);
+            }, intervalMs);
         };
 
         const runStep = () => {
@@ -388,28 +619,19 @@ const ReinaPage = () => {
             setLoadingText(step.text);
             setLoadingStep(currentIdx);
 
-            isMuted = !!step.mute;
-            if (step.shutter) playShutter();
-            
-            if (step.mute) {
-                if (heartbeatIntervalRef.current) clearInterval(heartbeatIntervalRef.current);
-            } else if (currentIdx === 6) { // Resume faster after FOUND.
-                startHeartbeat(450); // Double speed heartbeat for panic
-                rampDroneLocal(0.35, 1.5);
-            } else if (currentIdx === 0) {
-                startHeartbeat(800);
+            if (step.thud) playLowHeartThud(0.5);
+            if (step.whisper) playWhisperFilterSweep();
+            if (step.inhale) playInhale();
+            if (step.hbSpeed) startHeartbeatLoop(step.hbSpeed);
+
+            if (step.drone) {
                 startDrone();
-                rampDroneLocal(0.12, 1.0);
+                rampDroneLocal(step.drone, 1.2);
             }
 
-            if (step.inhale) {
-                playInhale();
-            }
-
-            // Subliminal flash trigger near the end
-            if (currentIdx === 11) {
-                setTimeout(() => setIsSubliminal(true), 200);
-                setTimeout(() => setIsSubliminal(false), 260);
+            if (step.subliminal) {
+                setTimeout(() => setIsSubliminal(true), 150);
+                setTimeout(() => setIsSubliminal(false), 240);
             }
 
             setTimeout(() => {
@@ -424,7 +646,7 @@ const ReinaPage = () => {
             if (heartbeatIntervalRef.current) clearInterval(heartbeatIntervalRef.current);
             stopDrone();
         };
-    }, [vrmLoading]);
+    }, [vrmLoading, actualCity]);
 
     // Randomized Post-Load Glitch
     useEffect(() => {
@@ -495,9 +717,22 @@ const ReinaPage = () => {
         // VRM is ready, but we wait for the sequence to finish
     }, []);
 
-    // Triggered when loading sequence finishes (called by a new useEffect or logic)
+    // Safety fallback timeout to ensure loading screen never hangs permanently
     useEffect(() => {
-        if (loadingStep === 12) { // Last step index
+        if (vrmLoading) {
+            const safetyTimer = setTimeout(() => {
+                console.log("⚡ [Safety Fallback] Dismissing loading screen overlay");
+                setVrmLoading(false);
+                stopDrone();
+                resetIdleTimer();
+            }, 8500);
+            return () => clearTimeout(safetyTimer);
+        }
+    }, [vrmLoading, resetIdleTimer]);
+
+    // Triggered when loading sequence finishes
+    useEffect(() => {
+        if (loadingStep === 7) { // Last step index (step 7: やっと、二人きり…♥)
             setTimeout(() => {
                 setIsWhiteout(true);
                 setTimeout(() => {
@@ -507,8 +742,8 @@ const ReinaPage = () => {
                     stopDrone();
                     setTimeout(() => setEmotion("sweet"), 800); 
                     resetIdleTimer();
-                }, 100); // 1 frame flash
-            }, 800); // duration of last step
+                }, 100); // 1 frame whiteout flash
+            }, 1400); // duration of last step
         }
     }, [loadingStep, resetIdleTimer]);
 
@@ -574,8 +809,20 @@ const ReinaPage = () => {
         if (audioQueue.current.length === 0) {
             isPlayingQueue.current = false;
             setIsTalking(false);
-            setAnimation("");
             setActiveSentence("");
+            
+            // 💃 Check if a dance was requested — trigger dance immediately after speech finishes!
+            if (pendingDanceRef.current && hasSpokenRef.current) {
+                const danceAnim = pendingDanceRef.current;
+                pendingDanceRef.current = null;
+                hasSpokenRef.current = false;
+                console.log("💃 [Reina] Spoken intro finished! Getting ready and starting dance:", danceAnim);
+                setTimeout(() => {
+                    setAnimation(danceAnim);
+                }, 400);
+            } else if (!pendingDanceRef.current) {
+                setAnimation("");
+            }
             
             setTimeout(() => {
                 if (!isPlayingQueue.current && audioQueue.current.length === 0 && !isLoading) {
@@ -610,7 +857,7 @@ const ReinaPage = () => {
         const audio = new Audio(url);
         audio.crossOrigin = "anonymous";
         audio.volume = 1.0;
-        audio.muted = false;
+        audio.muted = isMuted;
         activeAudio.current = audio;
 
         // ⚡ FIX: Connect to Analyser and Speakers
@@ -621,6 +868,7 @@ const ReinaPage = () => {
         // ⚡ SYNC FIX: Only show 'Speaking' and highlight text when sound ACTUALLY starts
         audio.onplaying = () => {
             setIsTalking(true);
+            hasSpokenRef.current = true;
             setActiveSentence(text);
         };
 
@@ -695,6 +943,16 @@ const ReinaPage = () => {
                 });
 
                 if (ttsRes.ok) {
+                    const contentType = ttsRes.headers.get("content-type") || "";
+                    if (contentType.includes("json")) {
+                        const json = await ttsRes.json();
+                        if (json.success === false) {
+                            console.warn("⚠️ [Voicevox TTS] Service reported:", json.error);
+                            task.url = "ERROR";
+                            playNextInQueue();
+                            return;
+                        }
+                    }
                     console.log(`✅ [Voicevox TTS Success] Audio generated for text: "${text.substring(0, 30)}..."`);
                     const blob = await ttsRes.blob();
                     task.url = URL.createObjectURL(blob);
@@ -890,7 +1148,7 @@ MANDATORY: START your response with <MOVE index="N" />.`;
 
             const gameEndpoint = selectedModel === "kira"
                 ? 'http://localhost:5000/api/v1/ai/kira/chat'
-                : '/api/v1/ai/chat-reina-com';
+                : 'http://localhost:5000/api/v1/ai/reina-com/chat';
             const gameModel = selectedModel === "kira" ? "kira" : "reina-com";
 
             const response = await fetch(gameEndpoint, {
@@ -1022,6 +1280,16 @@ MANDATORY: START your response with <MOVE index="N" />.`;
             lastInteractionRef.current = Date.now() + 10000; // Freeze in dead stare for 10s extra
         }
 
+        hasSpokenRef.current = false;
+        const isDanceRequest = (
+            /(?:please\s+)?dance(?:\s+for\s+me)?|dance\s+for\s+me|can\s+you\s+dance|do\s+a\s+dance|wanna\s+dance|踊って|ダンスして|おどって|kyun\s*dance/i.test(userMsg) &&
+            !/(?:dance\s+(?:was|is)|great\s+dance|nice\s+dance|loved?\s+(?:the|your)\s+dance|good\s+dance|thanks?\s+for\s+the\s+dance|after\s+the\s+dance|that\s+dance|cool\s+dance|amazing\s+dance)/i.test(userMsg)
+        );
+        if (isDanceRequest) {
+            pendingDanceRef.current = "kyun_dance";
+            console.log("💃 [Reina] Explicit dance request detected in user prompt, queued pending dance.");
+        }
+
         try {
             const token = Cookies.get('token');
             const allMsgs = [...messages, { sender: 'user', text: userMsg }];
@@ -1029,15 +1297,19 @@ MANDATORY: START your response with <MOVE index="N" />.`;
                 `${m.sender === 'user' ? 'Darling' : aiName}: ${m.text}`
             ).join('\n');
 
-            let apiEndpoint = 'http://localhost:5000/api/v1/ai/dolphin/chat';
-            if (selectedModel === "kira") {
+            let apiEndpoint = 'http://localhost:5000/api/v1/ai/reina-com/chat';
+            if (selectedModel === "2d") {
+                apiEndpoint = 'http://localhost:5000/api/v1/ai/2d/chat';
+            } else if (selectedModel === "kira") {
                 apiEndpoint = 'http://localhost:5000/api/v1/ai/kira/chat';
             } else if (selectedModel === "reina-gemini") {
                 apiEndpoint = 'http://localhost:5000/api/v1/ai/reina-gemini/chat';
-            } else if (selectedModel === "reina-com") {
-                apiEndpoint = 'http://localhost:5000/api/v1/ai/reina-com/chat';
             } else if (selectedModel === "gemma4:e4b") {
                 apiEndpoint = 'http://localhost:5000/api/v1/ai/reina-hacker/chat';
+            } else if (selectedModel && selectedModel.includes("dolphin")) {
+                apiEndpoint = 'http://localhost:5000/api/v1/ai/dolphin/chat';
+            } else {
+                apiEndpoint = 'http://localhost:5000/api/v1/ai/reina-com/chat';
             }
 
             const response = await fetch(apiEndpoint, {
@@ -1046,7 +1318,13 @@ MANDATORY: START your response with <MOVE index="N" />.`;
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ model: selectedModel, message: userMsg, context: context })
+                body: JSON.stringify({ 
+                    model: selectedModel, 
+                    message: userMsg, 
+                    context: context, 
+                    bgmMode: bgmMode,
+                    isYandere: bgmMode === 'yandere'
+                })
             });
 
             if (!response.ok) throw new Error("Stream failed");
@@ -1078,36 +1356,38 @@ MANDATORY: START your response with <MOVE index="N" />.`;
                 fullText += chunk;
                 sentenceBuffer += chunk;
 
-                // 1. Eager Emotion/Anim Parsing (from the start of fullText if not done)
-                if (!hasParsedEmotion) {
-                    const emotionMatch = fullText.match(/\[emotion=([^\]]+)\]/);
-                    if (emotionMatch) {
-                        const e = emotionMatch[1].trim().toLowerCase();
-                        currentEmotionRef.current = e;
-                        console.log("🎭 [AI Parse] Emotion Detected:", e);
-                        
-                        if (e === "whisper") {
+                // 1. Eager Emotion/Anim Parsing (updates dynamically as new tags stream in)
+                const emotionMatches = [...fullText.matchAll(/\[(?:emotion|exp)=([^\]]+)\]/g)];
+                if (emotionMatches.length > 0) {
+                    const latestEmotion = emotionMatches[emotionMatches.length - 1][1].trim().toLowerCase();
+                    if (currentEmotionRef.current !== latestEmotion) {
+                        currentEmotionRef.current = latestEmotion;
+                        console.log("🎭 [AI Parse] Emotion Detected:", latestEmotion);
+                        if (latestEmotion === "whisper") {
                             setEmotion("scary_smile2");
                             setAnimation("idle1");
-                            hasParsedAnim = true; // Use idle1 as specified for whisper
                         } else {
-                            setEmotion(e);
+                            setEmotion(latestEmotion);
                         }
-                        
-                        hasParsedEmotion = true;
                     }
                 }
 
                 if (!hasParsedAnim) {
                     const animMatch = fullText.match(/\[anim=([^\]]+)\]/);
                     if (animMatch) {
-                        const requestedAnim = animMatch[1];
+                        const requestedAnim = animMatch[1].trim();
                         console.log("🏃 [AI Parse] Animation Detected:", requestedAnim);
-                        const allowedAnims = ["idle1", "idle2", "VRMA_07", "nod", "shake", "angry", "happy", "sadIdle"];
-                        if (allowedAnims.includes(requestedAnim)) {
-                            setAnimation(requestedAnim);
+                        const isDance = requestedAnim === "kyun_dance" || requestedAnim === "dance1";
+                        if (isDance) {
+                            pendingDanceRef.current = requestedAnim;
+                            setAnimation("happy"); // Gesture happily while speaking intro line
                         } else {
-                            setAnimation("angry"); // Safe fallback
+                            const allowedAnims = ["idle1", "idle2", "VRMA_07", "nod", "shake", "angry", "happy", "sadIdle", "greeting"];
+                            if (allowedAnims.includes(requestedAnim)) {
+                                setAnimation(requestedAnim);
+                            } else {
+                                setAnimation("happy");
+                            }
                         }
                         lastInteractionRef.current = Date.now();
                         hasParsedAnim = true;
@@ -1142,21 +1422,37 @@ MANDATORY: START your response with <MOVE index="N" />.`;
                     });
                 }
 
-                // 2. Clear tags, thoughts, and translations for UI
-                let uiText = fullText
+                // 2. Clear tags, thoughts, JSON wrappers, and translations for UI
+                let rawUiText = fullText;
+                if (rawUiText.trim().startsWith('{"response":"') || rawUiText.trim().startsWith('{"reply":"')) {
+                    try {
+                        const parsed = JSON.parse(rawUiText);
+                        rawUiText = parsed.response || parsed.reply || rawUiText;
+                    } catch (e) {
+                        rawUiText = rawUiText.replace(/^\{"(?:response|reply)":\s*"/i, '').replace(/"\}$/, '');
+                    }
+                }
+
+                let uiText = rawUiText
                     .replace(/<(thought|think|execute|search|type)>[\s\S]*?<\/(thought|think|execute|search|type)>/gi, '') 
                     .replace(/<(thought|think|execute|search|type)>[\s\S]*/gi, '') 
                     .replace(/<[^>]*$/g, '') // HIDE PARTIAL TAGS AT THE END OF STREAM
                     .replace(/<OPEN_GAME[^>]*>/gi, '') 
                     .replace(/<MOVE[^>]*>/gi, '') 
                     .replace(/\[ACTION:[A-Z_]+\]/g, '')
-                    .replace(/\[emotion=[^\]]+\]/g, '')
-                    .replace(/\[anim=[^\]]+\]/g, '')
+                    .replace(/\[(?:emotion|exp)=[^\]]+\]/g, '')
+                    .replace(/\[(?:anim|motion)=[^\]]+\]/g, '')
                     .replace(/\[voice=[^\]]+\]/g, '')
+                    .replace(/\[SYSTEM(?:\s+MESSAGE)?:\s*[^\]]*\]/gi, '') // Strip [SYSTEM MESSAGE: ...] leaks
                     .replace(/\[[A-Z_]+\]/g, '') 
+                    .replace(/\[(?:This|The|User|Response|Note|System|Assistant|Persona|Context)[^\]]*\]/gi, '') // Strip meta-reasoning leaks
+                    .replace(/\[[^\]]*\b(?:input|persona|response|context|action)\b[^\]]*\]/gi, '') // Strip persona meta notes
+                    .replace(/\[[^\]]*[a-zA-Z]{3,}[^\]]*\]/g, '') // Strip any remaining bracketed English text
                     .replace(/\(Translation:[^)]+\)/gi, '') 
                     .replace(/\([^)]*translation[^)]*\)/gi, '') 
                     .replace(/<[^>]+>/g, '')
+                    .replace(/([\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2728}\u{1F496}])\1{2,}/gu, '$1$1') // Collapse spammed emojis (e.g. ✨✨✨✨ -> ✨✨)
+                    .replace(/(.)\1{5,}/g, '$1$1') // Collapse any 6+ repeated identical characters
                     .trim();
                     
                 if (uiText) {
@@ -1173,7 +1469,10 @@ MANDATORY: START your response with <MOVE index="N" />.`;
                         .replace(/<(thought|think|execute|search|type)>[\s\S]*/gi, '')
                         .replace(/<OPEN_GAME[^>]*>/gi, '')
                         .replace(/<MOVE[^>]*>/gi, '')
+                        .replace(/\[SYSTEM(?:\s+MESSAGE)?:\s*[^\]]*\]/gi, '')
+                        .replace(/\[(?:This|The|User|Response|Note|System|Assistant)[^\]]*\]/gi, '')
                         .replace(/\[[^\]]+\]/g, '')
+                        .replace(/([\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2728}\u{1F496}])\1+/gu, '') // Strip emojis from TTS audio input
                         .trim();
                     if (cleanSentence) {
                         synthesizeAndQueue(cleanSentence, token);
@@ -1308,6 +1607,17 @@ MANDATORY: START your response with <MOVE index="N" />.`;
         } finally {
             // No longer clearing latestAiMsg here, cleanup happens in playNextInQueue
             setIsLoading(false);
+            
+            // 💃 Safety fallback: If dance is pending and no speech queue is playing/left, start dance
+            setTimeout(() => {
+                if (pendingDanceRef.current && !isPlayingQueue.current && audioQueue.current.length === 0) {
+                    const fallbackDance = pendingDanceRef.current;
+                    pendingDanceRef.current = null;
+                    hasSpokenRef.current = false;
+                    console.log("💃 [Reina] Triggering dance after stream completion:", fallbackDance);
+                    setAnimation(fallbackDance);
+                }
+            }, 800);
         }
     };
 
@@ -1326,34 +1636,82 @@ MANDATORY: START your response with <MOVE index="N" />.`;
         resetIdleTimer(); // Hide thoughts when user types
     };
 
+    const isDancing = dancePhase !== "idle" || animation === "kyun_dance" || animation === "dance1";
+
+    const neonFlowers = React.useMemo(() => {
+        if (!isDancing) return [];
+        return Array.from({ length: 45 }).map((_, i) => ({
+            id: i,
+            left: `${Math.random() * 100}%`,
+            delay: `${Math.random() * 8}s`,
+            duration: `${Math.random() * 6 + 6}s`,
+            scale: Math.random() * 0.8 + 0.5,
+            dir: Math.random() > 0.5 ? 'cw' : 'ccw',
+            type: Math.random() > 0.6 ? 'heart' : 'sakura'
+        }));
+    }, [isDancing]);
+
     return (
-        <div className={`reina-page ${isPostLoadGlitch ? 'active-glitch' : ''} ${isLocked ? 'locked-shake' : ''}`}>
+        <div className={`reina-page ${isDancing ? 'dance-cinematic-mode' : ''} ${isPostLoadGlitch ? 'active-glitch' : ''} ${isLocked ? 'locked-shake' : ''}`}>
              {isWhiteout && <div className="reveal-whiteout" />}
-            {/* Top bar — minimal */}
-            {/* Closeness Meter */}
-            <div className="reina-closeness-container" title={`Closeness: ${closeness}/100`}>
-                <div className="closeness-label">Affection</div>
-                <div className="closeness-bar-bg">
+             
+            {isDancing && (
+                <button 
+                    className="dance-exit-btn" 
+                    onClick={finishDanceSmooth}
+                    title="Stop Dance"
+                >
+                    <Heart size={22} fill="#ff4b8d" color="#ffffff" />
+                </button>
+            )}
+
+            {/* Dance Stage Background Overlay and Neon Flowers */}
+            <div className="dance-stage-bg">
+                {isDancing && neonFlowers.map(flower => (
                     <div 
-                        className="closeness-bar-fill" 
-                        style={{ width: `${closeness}%`, background: closeness > 80 ? '#ff4b8d' : (closeness > 30 ? '#ff85a1' : '#888') }} 
-                    />
-                </div>
-                <div className="closeness-heart">♥</div>
+                        key={flower.id} 
+                        className={`neon-shape-container anim-${flower.dir}`}
+                        style={{
+                            left: flower.left,
+                            animationDuration: flower.duration,
+                            animationDelay: flower.delay,
+                            transform: `scale(${flower.scale})`
+                        }}
+                    >
+                        <div className={`neon-shape shape-${flower.type}`}></div>
+                    </div>
+                ))}
             </div>
 
-            <div className="reina-top-bar">
-                <button 
-                    className={`back-btn ${isBackBtnGlitchingIntense ? 'glitch-intense' : ''} ${isBackBtnPlea ? 'plea-state' : ''}`} 
-                    onClick={() => !isLocked && navigate('/diary')}
-                >
-                    <ChevronLeft size={14} /> {backBtnText}
-                </button>
-                <span className="title" onDoubleClick={handleResetGlitches} style={{ cursor: 'pointer' }}>
-                    {selectedModel === "kira" ? "✨ Kira (キラ) ✨" : "♥ Reina (ずんだもん) ♥"}
-                </span>
-                <div style={{ width: 60 }} /> {/* spacer */}
-            </div>
+            {/* Top bar — minimal */}
+            {/* Closeness Meter */}
+            {!isDancing && (
+                <div className="reina-closeness-container" title={`Closeness: ${closeness}/100`}>
+                    <div className="closeness-label">Affection</div>
+                    <div className="closeness-bar-bg">
+                        <div 
+                            className="closeness-bar-fill" 
+                            style={{ width: `${closeness}%`, background: closeness > 80 ? '#ff4b8d' : (closeness > 30 ? '#ff85a1' : '#888') }} 
+                        />
+                    </div>
+                    <div className="closeness-heart">♥</div>
+                </div>
+            )}
+
+            {!isDancing && (
+                <div className="reina-top-bar">
+                    <button 
+                        className={`back-btn ${isBackBtnGlitchingIntense ? 'glitch-intense' : ''} ${isBackBtnPlea ? 'plea-state' : ''}`} 
+                        onClick={() => !isLocked && navigate('/diary')}
+                    >
+                        <ChevronLeft size={14} /> {backBtnText}
+                    </button>
+                    <span className="title" onDoubleClick={handleResetGlitches} style={{ cursor: 'pointer' }}>
+                        {selectedModel === "kira" ? "✨ Kira (キラ) ✨" : "♥ Reina (ずんだもん) ♥"}
+                    </span>
+                    <div style={{ width: 60 }} /> {/* spacer */}
+                </div>
+            )}
 
             {/* Scary Background Text Overlay */}
             {scaryTextActive && (
@@ -1443,28 +1801,87 @@ MANDATORY: START your response with <MOVE index="N" />.`;
                     )}
                 </div>
 
-                <VrmAvatar
-                    emotion={emotion}
-                    animation={animation}
-                    isTalking={isTalking}
-                    peak={peak} 
-                    modelUrl={`/models/${modelName}.vrm`}
-                    closeness={closeness}
-                    onLoad={handleVrmLoaded}
-                    onInteraction={handleAvatarInteraction}
-                />
+                {modelName === "March 7th" ? (
+                    <Live2dAvatar
+                        emotion={emotion}
+                        isTalking={isTalking}
+                        peak={peak}
+                        modelPath="/models/March 7th/march 7th.model3.json"
+                        onLoad={handleVrmLoaded}
+                        onInteraction={handleAvatarInteraction}
+                    />
+                ) : (
+                    <VrmAvatar
+                        emotion={emotion}
+                        animation={dancePhase !== "idle" ? renderedDanceAnim : animation}
+                        isDancing={dancePhase !== "idle" || animation === "kyun_dance" || animation === "dance1"}
+                        isTalking={isTalking}
+                        peak={peak} 
+                        modelUrl={`/models/${modelName}.vrm`}
+                        closeness={closeness}
+                        onLoad={handleVrmLoaded}
+                        onInteraction={handleAvatarInteraction}
+                    />
+                )}
 
             </div>
 
-            {/* Animation Settings — Moved outside wrapper for better stacking */}
-            <button
-                className={`reina-anim-toggle ${showAnimSettings ? 'active' : ''}`}
-                style={{ zIndex: 1000 }}
-                onClick={() => setShowAnimSettings(!showAnimSettings)}
-                title="Animation Settings"
-            >
-                <Settings2 size={18} />
-            </button>
+            {/* Mode & Prompt Toggle Button (Sweet Love vs Yandere) */}
+            {/* Mode & Action Buttons */}
+            {!isDancing && (
+                <>
+                    <button
+                        className={`reina-bgm-btn mode-${bgmMode}`}
+                        style={{ zIndex: 1000 }}
+                        onClick={() => {
+                            initAudio();
+                            setBgmMode(prev => {
+                                const nextMode = prev === 'yandere' ? 'sweet_love' : 'yandere';
+                                if (nextMode === 'yandere') {
+                                    setEmotion("scary_smile2");
+                                    setAnimation("VRMA_07");
+                                } else {
+                                    setEmotion("sweet");
+                                    setAnimation("idle1");
+                                }
+                                return nextMode;
+                            });
+                        }}
+                        title="Toggle Persona & System Prompt (Sweet Love vs Yandere Mode)"
+                    >
+                        {bgmMode === 'yandere' ? '🥀 YANDERE MODE' : '💕 SWEET MODE'}
+                    </button>
+
+                    {/* Standalone Mute Button */}
+                    <button
+                        className={`reina-mute-btn ${isMuted ? 'muted' : ''}`}
+                        style={{ zIndex: 1000 }}
+                        onClick={() => {
+                            initAudio();
+                            setIsMuted(prev => {
+                                const nextMuted = !prev;
+                                if (activeAudio.current) {
+                                    activeAudio.current.muted = nextMuted;
+                                }
+                                return nextMuted;
+                            });
+                        }}
+                        title={isMuted ? "Unmute Audio" : "Mute Audio"}
+                    >
+                        {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+                    </button>
+
+                    {/* Animation Settings — Moved outside wrapper for better stacking */}
+                    <button
+                        className={`reina-anim-toggle ${showAnimSettings ? 'active' : ''}`}
+                        style={{ zIndex: 1000 }}
+                        onClick={() => setShowAnimSettings(!showAnimSettings)}
+                        title="Animation Settings"
+                    >
+                        <Settings2 size={18} />
+                    </button>
+                </>
+            )}
 
             {showAnimSettings && (
                 <div className="reina-anim-picker" style={{ zIndex: 1001 }}>
@@ -1473,7 +1890,7 @@ MANDATORY: START your response with <MOVE index="N" />.`;
                             <span>Choose Model</span>
                         </div>
                         <div className="picker-grid models">
-                            {["Reina", "Ayano"].map(m => (
+                            {["Reina", "Ayano", "March 7th"].map(m => (
                                 <button
                                     key={m}
                                     className={`anim-btn ${modelName === m ? 'active' : ''}`}
@@ -1482,7 +1899,7 @@ MANDATORY: START your response with <MOVE index="N" />.`;
                                         resetIdleTimer();
                                     }}
                                 >
-                                    {m}
+                                    {m === "March 7th" ? "March 7th (2D)" : m}
                                 </button>
                             ))}
                         </div>
@@ -1493,13 +1910,13 @@ MANDATORY: START your response with <MOVE index="N" />.`;
                             <span>Brain Model</span>
                         </div>
                         <div className="picker-grid models">
-                            {["kira", "reina", "reina-gemini", "reina-com", "reinaT", "reinaTD", "reinaJ", "reinaE", "gemma4:e4b", "dolphin3:8b"].map(m => (
+                            {["2d", "kira", "reina", "reina-gemini", "reina-com", "reinaT", "reinaTD", "reinaJ", "reinaE", "gemma4:e4b", "dolphin3:8b"].map(m => (
                                 <button
                                     key={m}
                                     className={`anim-btn ${selectedModel === m ? 'active' : ''}`}
                                     onClick={() => setSelectedModel(m)}
                                 >
-                                    {m === "kira" ? "★ KIRA" : (m === "reina-gemini" ? "REINA (Gemini)" : (m === "reina-com" ? "Companion" : m))}
+                                    {m === "2d" ? "🌸 2D (Gemma 4)" : (m === "kira" ? "★ KIRA" : (m === "reina-gemini" ? "REINA (Gemini)" : (m === "reina-com" ? "Companion" : m)))}
                                 </button>
                             ))}
                         </div>
@@ -1524,7 +1941,40 @@ MANDATORY: START your response with <MOVE index="N" />.`;
 
                     <div className="picker-section">
                         <div className="picker-header">
-                            <span>Faces</span>
+                            <span>2D Live2D Expressions</span>
+                            <button onClick={() => {
+                                setEmotion("blush");
+                                resetIdleTimer();
+                            }}>Reset</button>
+                        </div>
+                        <div className="picker-grid models">
+                            {[
+                                { id: "blush", label: "🌸 Blush" },
+                                { id: "dark", label: "🥀 Dark Yandere" },
+                                { id: "peace", label: "✌️ Peace" },
+                                { id: "star", label: "⭐ Star Eyes" },
+                                { id: "shy", label: "🙈 Shy Cover" },
+                                { id: "camera", label: "📷 Camera Pose" },
+                                { id: "crying", label: "😭 Crying" },
+                                { id: "sweat", label: "💦 Sweat Drop" }
+                            ].map(exp => (
+                                <button
+                                    key={exp.id}
+                                    className={`anim-btn ${emotion === exp.id ? 'active' : ''}`}
+                                    onClick={() => {
+                                        setEmotion(exp.id);
+                                        resetIdleTimer();
+                                    }}
+                                >
+                                    {exp.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="picker-section">
+                        <div className="picker-header">
+                            <span>Faces (3D VRM)</span>
                             <button onClick={() => {
                                 setEmotion("neutral");
                                 resetIdleTimer();
@@ -1556,21 +2006,42 @@ MANDATORY: START your response with <MOVE index="N" />.`;
                         </div>
                         <div className="picker-grid">
                             {[
-                                "VRMA_01", "VRMA_02", "VRMA_03", "VRMA_04",
-                                "VRMA_05", "VRMA_06", "VRMA_07", "greeting",
-                                "idle1", "idle2", "Talking", "sadIdle", "angry",
-                                "pose_friendy", "pose_lillian", "pose_nyammy", "pose_wonderful"
-                            ].map(name => (
+                                { id: "kyun_dance", label: "💃 Kyun Kyun Dance" },
+                                { id: "dance1", label: "💃 Dance 1" },
+                                { id: "greeting", label: "👋 Greeting" },
+                                { id: "VRMA_01", label: "VRMA 01" },
+                                { id: "VRMA_02", label: "VRMA 02" },
+                                { id: "VRMA_03", label: "VRMA 03" },
+                                { id: "VRMA_04", label: "VRMA 04" },
+                                { id: "VRMA_05", label: "VRMA 05" },
+                                { id: "VRMA_06", label: "VRMA 06" },
+                                { id: "VRMA_07", label: "VRMA 07 (Yandere)" },
+                                { id: "idle1", label: "Idle 1" },
+                                { id: "idle2", label: "Idle 2" },
+                                { id: "Talking", label: "Talking" },
+                                { id: "sadIdle", label: "Sad Idle" },
+                                { id: "angry", label: "Angry" },
+                                { id: "pose_friendy", label: "Pose Friendly" },
+                                { id: "pose_lillian", label: "Pose Lillian" },
+                                { id: "pose_nyammy", label: "Pose Nyammy" },
+                                { id: "pose_wonderful", label: "Pose Wonderful" }
+                            ].map(item => (
                                 <button
-                                    key={name}
-                                    className={`anim-btn ${animation === name ? 'active' : ''}`}
+                                    key={item.id}
+                                    className={`anim-btn ${animation === item.id ? 'active' : ''}`}
                                     onClick={() => {
-                                        setAnimation(name);
+                                        initAudio();
+                                        if (animation === item.id) {
+                                            setAnimation("");
+                                            setTimeout(() => setAnimation(item.id), 50);
+                                        } else {
+                                            setAnimation(item.id);
+                                        }
                                         lastInteractionRef.current = Date.now(); // ⚡ RESET IDLE TIMER for manual selection
                                         resetIdleTimer();
                                     }}
                                 >
-                                    {name}
+                                    {item.label}
                                 </button>
                             ))}
                         </div>
@@ -1579,174 +2050,203 @@ MANDATORY: START your response with <MOVE index="N" />.`;
             )}
 
             {/* Bottom centered input — glassmorphism */}
-            <div className="reina-bottom-input">
-                <form className="reina-input-glass" onSubmit={handleSend}>
-                    <button
-                        type="button"
-                        className={`voice-mode-toggle ${isVoiceMode ? 'active' : ''} ${isListening ? 'listening' : ''}`}
-                        onClick={toggleVoiceMode}
-                        title="Continuous Voice Mode"
-                        style={{
-                            background: isVoiceMode ? (isListening ? 'rgba(255,50,50,0.5)' : 'rgba(100,200,100,0.3)') : 'rgba(255,255,255,0.1)',
-                            border: 'none',
-                            borderRadius: '50%',
-                            width: '36px',
-                            height: '36px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: 'pointer',
-                            marginRight: '10px',
-                            transition: 'all 0.3s ease'
-                        }}
-                    >
-                        {isListening ? '🎙️' : '🎤'}
-                    </button>
-                    <input
-                        type="text"
-                        value={input}
-                        onChange={handleInputChange}
-                        placeholder={selectedModel === "kira" ? "Talk to Kira..." : "Whisper to Reina..."}
-                        disabled={isLoading}
-                    />
-                    <button
-                        type="submit"
-                        className="send-btn"
-                        disabled={isLoading || !input.trim()}
-                    >
-                        {isLoading ? (
-                            <div className="loading-spinner" />
-                        ) : (
-                            <Send size={16} />
-                        )}
-                    </button>
-                    <button type="submit" id="reina-hidden-submit" style={{ display: 'none' }}></button>
-                </form>
-                
-                {/* Game Trigger */}
-                <button 
-                    className={`reina-game-btn ${showGame ? 'active' : ''}`}
-                    onClick={() => setShowGame(!showGame)}
-                >
-                    🎮
-                </button>
-
-                {showGame && (
-                    <div className="reina-janken-panel">
-                        {isCountingDown ? (
-                            <div className="game-countdown-overlay">
-                                <span>{countdownText}</span>
-                            </div>
-                        ) : !gameType ? (
-                            <div className="game-menu">
-                                <span className="menu-title">Choose a Game! ✨</span>
-                                <button onClick={() => setGameType('janken')}>✊ Janken</button>
-                                <button onClick={() => setGameType('coin')}>🪙 Coin Flip</button>
-                                <button onClick={() => setGameType('number')}>🔢 Guess Number</button>
-                                <button onClick={() => setGameType('tictactoe')}>❌ Tic-Tac-Toe</button>
-                            </div>
-                        ) : (
-                            <div className="active-game-container">
-                                <button className="game-back-btn" onClick={() => setGameType(null)}>← Back</button>
-                                {gameResult ? (
-                                    <div className="janken-result-overlay">
-                                        <div className="move-compare">
-                                            <span>You: {playerMove}</span>
-                                            <span>vs</span>
-                                            <span>Reina: {reinaMove}</span>
-                                        </div>
-                                        <div className={`result-text ${gameResult.toLowerCase()}`}>
-                                            {gameResult === "WON" ? "REINA WINS!" : (gameResult === "LOST" ? "YOU WIN!" : "DRAW!")}
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <>
-                                        {gameType === 'janken' && (
-                                            <div className="janken-choices">
-                                                <button onClick={() => handleJanken("Rock")}>✊ Rock</button>
-                                                <button onClick={() => handleJanken("Paper")}>✋ Paper</button>
-                                                <button onClick={() => handleJanken("Scissors")}>✌️ Scissors</button>
-                                            </div>
-                                        )}
-                                        {gameType === 'coin' && (
-                                            <div className="janken-choices">
-                                                <button onClick={() => handleCoinFlip("Heads")}>🪙 Heads</button>
-                                                <button onClick={() => handleCoinFlip("Tails")}>🪙 Tails</button>
-                                            </div>
-                                        )}
-                                        {gameType === 'number' && (
-                                            <div className="janken-choices number-grid">
-                                                {[1,2,3,4,5,6,7,8,9,10].map(n => (
-                                                    <button key={n} onClick={() => handleNumberGuess(n)}>{n}</button>
-                                                ))}
-                                            </div>
-                                        )}
-                                        {gameType === 'tictactoe' && (
-                                            <div className="ttt-grid">
-                                                {tttBoard.map((cell, idx) => (
-                                                    <button 
-                                                        key={idx} 
-                                                        className={`ttt-cell ${cell ? 'filled' : ''}`}
-                                                        onClick={() => handleTttMove(idx, 'X')}
-                                                        disabled={!isPlayerTurn || cell || isLoading}
-                                                    >
-                                                        {cell}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                )}
-            </div>
-            {/* Total Privacy Breach Loading Overlays — FULL PAGE FIXED POSITION */}
-            {vrmLoading && (
-                <div className={`scary-loader-overlay ${loadingStep === 5 ? 'shake-intense' : ''}`}>
-                    <div className="noise-overlay" />
+            {!isDancing && (
+                <div className="reina-bottom-input">
+                    <form className="reina-input-glass" onSubmit={handleSend}>
+                        <button
+                            type="button"
+                            className={`voice-mode-toggle ${isVoiceMode ? 'active' : ''} ${isListening ? 'listening' : ''}`}
+                            onClick={toggleVoiceMode}
+                            title="Continuous Voice Mode"
+                            style={{
+                                background: isVoiceMode ? (isListening ? 'rgba(255,50,50,0.5)' : 'rgba(100,200,100,0.3)') : 'rgba(255,255,255,0.1)',
+                                border: 'none',
+                                borderRadius: '50%',
+                                width: '36px',
+                                height: '36px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer',
+                                marginRight: '10px',
+                                transition: 'all 0.3s ease'
+                            }}
+                        >
+                            {isListening ? '🎙️' : '🎤'}
+                        </button>
+                        <input
+                            type="text"
+                            value={input}
+                            onChange={handleInputChange}
+                            placeholder={selectedModel === "kira" ? "Talk to Kira..." : "Whisper to Reina..."}
+                            disabled={isLoading}
+                        />
+                        <button
+                            type="submit"
+                            className="send-btn"
+                            disabled={isLoading || !input.trim()}
+                        >
+                            {isLoading ? (
+                                <div className="loading-spinner" />
+                            ) : (
+                                <Send size={16} />
+                            )}
+                        </button>
+                        <button type="submit" id="reina-hidden-submit" style={{ display: 'none' }}></button>
+                    </form>
                     
-                    <div className="scary-loader-content">
-                        {/* THE VOID EYE RETURNS — The user's preferred visual centerpiece */}
-                        <div className="void-eye-wrapper" style={{
-                            transform: `scale(${0.8 + (loadingStep * 0.05)})`,
-                            opacity: loadingStep >= 3 ? 1 : 0,
-                            animation: loadingStep >= 5 ? 'eye-vibration 0.05s infinite' : 'eye-vibration 0.1s infinite'
+                    {/* Game Trigger */}
+                    <button 
+                        className={`reina-game-btn ${showGame ? 'active' : ''}`}
+                        onClick={() => setShowGame(!showGame)}
+                    >
+                        🎮
+                    </button>
+
+                    {showGame && (
+                        <div className="reina-janken-panel">
+                            {isCountingDown ? (
+                                <div className="game-countdown-overlay">
+                                    <span>{countdownText}</span>
+                                </div>
+                            ) : !gameType ? (
+                                <div className="game-menu">
+                                    <span className="menu-title">Choose a Game! ✨</span>
+                                    <button onClick={() => setGameType('janken')}>✊ Janken</button>
+                                    <button onClick={() => setGameType('coin')}>🪙 Coin Flip</button>
+                                    <button onClick={() => setGameType('number')}>🔢 Guess Number</button>
+                                    <button onClick={() => setGameType('tictactoe')}>❌ Tic-Tac-Toe</button>
+                                </div>
+                            ) : (
+                                <div className="active-game-container">
+                                    <button className="game-back-btn" onClick={() => setGameType(null)}>← Back</button>
+                                    {gameResult ? (
+                                        <div className="janken-result-overlay">
+                                            <div className="move-compare">
+                                                <span>You: {playerMove}</span>
+                                                <span>vs</span>
+                                                <span>Reina: {reinaMove}</span>
+                                            </div>
+                                            <div className={`result-text ${gameResult.toLowerCase()}`}>
+                                                {gameResult === "WON" ? "REINA WINS!" : (gameResult === "LOST" ? "YOU WIN!" : "DRAW!")}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            {gameType === 'janken' && (
+                                                <div className="janken-choices">
+                                                    <button onClick={() => handleJanken("Rock")}>✊ Rock</button>
+                                                    <button onClick={() => handleJanken("Paper")}>✋ Paper</button>
+                                                    <button onClick={() => handleJanken("Scissors")}>✌️ Scissors</button>
+                                                </div>
+                                            )}
+                                            {gameType === 'coin' && (
+                                                <div className="janken-choices">
+                                                    <button onClick={() => handleCoinFlip("Heads")}>🪙 Heads</button>
+                                                    <button onClick={() => handleCoinFlip("Tails")}>🪙 Tails</button>
+                                                </div>
+                                            )}
+                                            {gameType === 'number' && (
+                                                <div className="janken-choices number-grid">
+                                                    {[1,2,3,4,5,6,7,8,9,10].map(n => (
+                                                        <button key={n} onClick={() => handleNumberGuess(n)}>{n}</button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            {gameType === 'tictactoe' && (
+                                                <div className="ttt-grid">
+                                                    {tttBoard.map((cell, idx) => (
+                                                        <button 
+                                                            key={idx} 
+                                                            className={`ttt-cell ${cell ? 'filled' : ''}`}
+                                                            onClick={() => handleTttMove(idx, 'X')}
+                                                            disabled={!isPlayerTurn || cell || isLoading}
+                                                        >
+                                                            {cell}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            )}
+            {/* Cursed Eye Awakening Yandere Loading Overlay */}
+            {vrmLoading && (
+                <div 
+                    className="scary-loader-overlay awakening-mode" 
+                    onClick={() => {
+                        console.log("⚡ [User Click] Dismissing loading screen overlay");
+                        setVrmLoading(false);
+                        stopDrone();
+                        resetIdleTimer();
+                    }}
+                    style={{ cursor: 'pointer' }}
+                    title="Click anywhere to enter"
+                >
+                    <div className="dark-vignette-overlay" />
+                    <div className="drifting-mist-layer" />
+                    <div className="shadow-claws-layer" />
+                    
+                    {/* FLOATING CORRUPTED HORROR KANJI IN EMPTY SCREEN SPACES */}
+                    <div className="floating-kanji-bg">
+                        <span className="kanji-particle p1">愛</span>
+                        <span className="kanji-particle p2">死</span>
+                        <span className="kanji-particle p3">逃</span>
+                        <span className="kanji-particle p4">視</span>
+                        <span className="kanji-particle p5">呪</span>
+                        <span className="kanji-particle p6">囚</span>
+                        <span className="kanji-particle p7">闇</span>
+                        <span className="kanji-particle p8">妄</span>
+                    </div>
+
+                    <div className="scary-loader-content awakening-content">
+                        {/* TWO ANIME EYES — CLOSED SLIT IN STEP 0, PEELS OPEN AT STEP 1 */}
+                        <div className="awakened-eyes-viewport" style={{
+                            transform: `scale(${0.9 + (loadingStep * 0.03)})`
                         }}>
-                            <div className="void-eye">
-                                <div className="iris" style={{
-                                    transform: `translate(-50%, -50%) scale(${1 + (loadingStep * 0.04)})`,
-                                    animation: loadingStep >= 7 ? 'iris-jitter 0.2s infinite' : 'iris-jitter 0.5s infinite'
-                                }}>
-                                    <div className="pupil" />
+                            <div className={`anime-eyes-pair ${loadingStep >= 1 ? 'eyes-peeled-open' : 'eyes-closed-slit'}`}>
+                                <div className="anime-eye-socket left">
+                                    <div className="scary-twitch-pupil corner-hold" />
+                                    {loadingStep >= 2 && (
+                                        <svg className="eye-blood-tear-svg" viewBox="0 0 40 160">
+                                            <path d="M20,0 Q23,40 17,80 T22,140 Q24,152 20,160 Q16,152 18,140 T23,80 Q17,40 20,0 Z" fill="#cc0022" />
+                                            <circle cx="20" cy="148" r="4" fill="#ff0033" className="blood-drop-dot" />
+                                        </svg>
+                                    )}
+                                </div>
+                                <div className="anime-eye-socket right">
+                                    <div className="scary-twitch-pupil corner-hold" />
+                                    {loadingStep >= 2 && (
+                                        <svg className="eye-blood-tear-svg" viewBox="0 0 40 160">
+                                            <path d="M20,0 Q24,45 16,85 T21,140 Q25,152 20,160 Q15,152 19,140 T24,85 Q16,45 20,0 Z" fill="#cc0022" />
+                                            <circle cx="20" cy="148" r="4" fill="#ff0033" className="blood-drop-dot" />
+                                        </svg>
+                                    )}
                                 </div>
                             </div>
                         </div>
-
-                        {/* Creeping Veins Overlay */}
-                        <div className="creeping-veins-container" style={{
-                            opacity: loadingStep >= 5 ? 0.3 + (loadingStep-5)*0.1 : 0
-                        }}>
-                            <svg viewBox="0 0 100 100" preserveAspectRatio="none">
-                                <path d="M0,0 Q10,30 5,60 T0,100" fill="none" stroke="#600" strokeWidth="0.5" />
-                                <path d="M100,0 Q90,30 95,60 T100,100" fill="none" stroke="#600" strokeWidth="0.5" />
-                            </svg>
-                        </div>
                         
-                        <h2 className={`glitch-text ${loadingStep >= 14 ? 'text-darling-jp' : 'text-darling-en'}`} style={{ fontSize: '48px' }}>
-                            {loadingStep === 14 ? 'やっと来てくれた。♥' : (loadingStep === 5 ? '見つけた。' : (loadingStep === 13 ? '逃げられないよ—' : loadingText))}
+                        <h2 
+                            key={loadingStep}
+                            className="scary-horror-jp-text lower-text-position" 
+                            style={{ fontSize: '38px', marginTop: '45px', position: 'relative', zIndex: 10020 }}
+                        >
+                            {loadingText}
                         </h2>
 
-                        {/* Subliminal Layer — Distorted Horror Faces */}
+                        {/* 100% Japanese Subliminal Text Flash */}
                         {isSubliminal && (
                             <div className="subliminal-overlay">
-                                {loadingStep >= 11 && (
-                                    <div className="subliminal-content horror-distorted">
-                                        <div className="subliminal-shadow-face"></div>
-                                        <div className="subliminal-text" style={{ fontSize: '100px' }}>ONLY ME</div>
+                                <div className="subliminal-content horror-distorted">
+                                    <div className="subliminal-text" style={{ fontSize: '80px', color: '#ff0033' }}>
+                                        {loadingStep % 2 === 0 ? "「逃がさない」" : "「ずっと一緒♥」"}
                                     </div>
-                                )}
+                                </div>
                             </div>
                         )}
                     </div>

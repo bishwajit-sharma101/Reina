@@ -69,6 +69,7 @@ const reinaComRoutes = require("./reina-com.routes");
 const ashTranslatorRoutes = require("./ashTranslator.routes");
 const auraRoutes = require("./aura.routes");
 const kiraRoutes = require("./kira.routes");
+const twoD = require("./2d.routes");
 
 // Apply middleware
 router.use("/translate_text/ash", limiter, ashTranslatorRoutes);
@@ -85,5 +86,6 @@ router.use("/reina-com", limiter, reinaComRoutes);
 router.use("/ash", ashTranslatorRoutes);
 router.use("/aura", auraRoutes);
 router.use("/kira", limiter, kiraRoutes);
+router.use("/2d", limiter, twoD);
 
 module.exports = router;

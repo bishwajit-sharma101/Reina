@@ -54,7 +54,9 @@ router.post("/tts", async (req, res) => {
 
     } catch (error) {
         console.error("❌ VOICEVOX Error:", error.message);
-        res.status(500).json({ success: false, error: error.message });
+        if (!res.headersSent) {
+            res.status(200).json({ success: false, error: error.message });
+        }
     }
 });
 
