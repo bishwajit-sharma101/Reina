@@ -91,3 +91,5 @@ out/
 # Large 3D VRM/VRMA files can be tracked with Git LFS if needed, or ignored:
 # *.vrm
 # *.vrma
+client/public/animations/converter/
+*.exe

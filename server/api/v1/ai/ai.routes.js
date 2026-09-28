@@ -70,6 +70,7 @@ const ashTranslatorRoutes = require("./ashTranslator.routes");
 const auraRoutes = require("./aura.routes");
 const kiraRoutes = require("./kira.routes");
 const twoD = require("./2d.routes");
+const sttRoutes = require("./stt.routes");
 
 // Apply middleware
 router.use("/translate_text/ash", limiter, ashTranslatorRoutes);
@@ -79,6 +80,7 @@ router.use("/analyze-chat", limiter, coachRoutes);
 router.use("/karma", limiter, karmaRoutes);
 router.use("/dolphin", limiter, dolphinRoutes);
 router.use("/voicevox", limiter, voicevoxRoutes);
+router.use("/stt", sttRoutes);
 router.use("/queen3", queen3Routes);
 router.use("/reina-gemini", reinaGeminiRoutes);
 router.use("/reina-hacker", limiter, reinaHackerRoutes);

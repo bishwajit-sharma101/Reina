@@ -1,0 +1,2896 @@
+{
+  "beats": [
+    6.339047619047619,
+    7.546485260770975,
+    11.168798185941043,
+    12.979954648526077,
+    15.394829931972788,
+    17.22920634920635,
+    18.436643990929706,
+    19.644081632653062,
+    20.271020408163267,
+    21.455238095238094,
+    22.66267573696145,
+    23.893333333333334,
+    25.727709750566895,
+    27.515646258503402,
+    31.7881179138322,
+    32.391836734693875,
+    32.97233560090703,
+    33.52961451247165,
+    34.08689342403628,
+    34.644172335600906,
+    35.20145124716553,
+    35.735510204081635,
+    36.31600907029478,
+    36.91972789115646,
+    37.52344671201814,
+    38.12716553287982,
+    38.75410430839002,
+    39.3578231292517,
+    39.9847619047619,
+    40.58848072562358,
+    41.16897959183674,
+    41.77269841269841,
+    42.399637188208615,
+    42.98013605442177,
+    43.607074829931975,
+    44.210793650793654,
+    44.81451247165533,
+    45.41823129251701,
+    46.021950113378686,
+    46.625668934240366,
+    47.22938775510204,
+    47.85632653061224,
+    48.46004535147392,
+    49.0637641723356,
+    49.66748299319728,
+    50.24798185941043,
+    50.828480725623585,
+    52.082358276643994,
+    52.68607709750567,
+    53.289795918367346,
+    58.746485260770974,
+    59.32698412698413,
+    59.953922902494334,
+    61.765079365079366,
+    63.59945578231292,
+    64.78367346938775,
+    65.41061224489796,
+    66.61804988662132,
+    67.221768707483,
+    68.42920634920635,
+    69.03292517006803,
+    70.24036281179139,
+    70.84408163265306,
+    71.47102040816327,
+    72.05151927437642,
+    72.67845804988661,
+    73.88589569160997,
+    74.48961451247166,
+    75.07011337868481,
+    75.697052154195,
+    76.3007709750567,
+    76.90448979591837,
+    77.48498866213151,
+    78.13514739229025,
+    78.73886621315192,
+    79.34258503401361,
+    79.94630385487528,
+    81.15374149659864,
+    81.75746031746031,
+    82.38439909297053,
+    82.96489795918367,
+    83.59183673469387,
+    84.19555555555556,
+    84.79927437641723,
+    85.40299319727892,
+    86.02993197278911,
+    86.61043083900226,
+    87.21414965986395,
+    87.84108843537415,
+    88.44480725623583,
+    89.0485260770975,
+    89.65224489795918,
+    90.25596371882087,
+    90.85968253968254,
+    91.46340136054421,
+    92.04390022675737,
+    92.67083900226757,
+    93.29777777777778,
+    93.90149659863945,
+    94.4819954648526,
+    95.10893424036281,
+    95.71265306122449,
+    96.31637188208617,
+    96.92009070294785,
+    97.52380952380952,
+    98.1275283446712,
+    99.35818594104309,
+    99.91546485260771,
+    100.54240362811791,
+    101.16934240362812,
+    101.7730612244898,
+    102.4,
+    102.98049886621315,
+    104.21115646258504,
+    104.81487528344671,
+    105.41859410430838,
+    106.02231292517007,
+    106.62603174603174,
+    107.22975056689343,
+    107.85668934240363,
+    108.43718820861677,
+    109.04090702947846,
+    109.64462585034013,
+    110.24834467120182,
+    110.8520634920635,
+    112.05950113378685,
+    112.68643990929705,
+    113.29015873015874,
+    113.89387755102041,
+    114.49759637188208,
+    115.10131519274377,
+    115.70503401360544,
+    116.30875283446711,
+    116.9124716553288,
+    117.51619047619047,
+    118.14312925170069,
+    118.74684807256236,
+    119.35056689342403,
+    119.95428571428572,
+    120.55800453514739,
+    121.16172335600908,
+    121.76544217687075,
+    134.48997732426304,
+    135.0936961451247,
+    135.69741496598638,
+    136.30113378684808,
+    136.90485260770976,
+    137.50857142857143,
+    138.13551020408164,
+    138.7392290249433,
+    139.34294784580499,
+    139.94666666666666,
+    140.52716553287982,
+    141.1308843537415,
+    141.7578231292517,
+    142.36154195011338,
+    142.96526077097505,
+    143.59219954648526,
+    144.19591836734693,
+    144.7996371882086,
+    145.4033560090703,
+    146.00707482993198,
+    146.61079365079365,
+    147.21451247165533,
+    147.818231292517,
+    148.42195011337867,
+    149.02566893424037,
+    149.62938775510204,
+    150.23310657596372,
+    150.86004535147393,
+    151.4637641723356,
+    152.06748299319727,
+    152.67120181405895,
+    153.27492063492065,
+    153.90185941043083,
+    154.5055782312925,
+    155.1092970521542,
+    155.71301587301588,
+    156.31673469387755,
+    156.92045351473922,
+    157.5241723356009,
+    158.1278911564626,
+    158.73160997732427,
+    159.33532879818594,
+    159.96226757369615,
+    160.56598639455783,
+    161.1697052154195,
+    161.77342403628117,
+    170.29514739229026,
+    170.89886621315193,
+    173.3601814058957,
+    173.96390022675737,
+    174.56761904761905,
+    175.17133786848072,
+    175.79827664399093,
+    176.4019954648526,
+    177.00571428571428,
+    177.60943310657598,
+    178.23637188208616,
+    178.84009070294783,
+    179.44380952380953,
+    180.0475283446712,
+    180.67446712018142,
+    181.2781859410431,
+    181.88190476190476,
+    182.48562358276644,
+    183.0893424036281,
+    183.71628117913832,
+    184.32,
+    186.15437641723355,
+    186.78131519274376,
+    191.65750566893425,
+    193.46866213151927,
+    194.09560090702948,
+    195.32625850340136,
+    197.16063492063492,
+    197.78757369614513,
+    199.01823129251702,
+    203.59256235827664
+  ],
+  "lyrics": [
+    {
+      "start": 5.659999999999999,
+      "end": 13.32,
+      "text": " You leave your umbrella by my chair again pretending it was extra just a lucky accident",
+      "words": [
+        {
+          "word": " You",
+          "start": 5.659999999999999,
+          "end": 6.36
+        },
+        {
+          "word": " leave",
+          "start": 6.36,
+          "end": 6.72
+        },
+        {
+          "word": " your",
+          "start": 6.72,
+          "end": 7.12
+        },
+        {
+          "word": " umbrella",
+          "start": 7.12,
+          "end": 7.78
+        },
+        {
+          "word": " by",
+          "start": 7.78,
+          "end": 8.84
+        },
+        {
+          "word": " my",
+          "start": 8.84,
+          "end": 9.12
+        },
+        {
+          "word": " chair",
+          "start": 9.12,
+          "end": 9.46
+        },
+        {
+          "word": " again",
+          "start": 9.46,
+          "end": 9.96
+        },
+        {
+          "word": " pretending",
+          "start": 9.96,
+          "end": 10.58
+        },
+        {
+          "word": " it",
+          "start": 10.58,
+          "end": 10.92
+        },
+        {
+          "word": " was",
+          "start": 10.92,
+          "end": 11.12
+        },
+        {
+          "word": " extra",
+          "start": 11.12,
+          "end": 11.52
+        },
+        {
+          "word": " just",
+          "start": 11.52,
+          "end": 11.86
+        },
+        {
+          "word": " a",
+          "start": 11.86,
+          "end": 11.98
+        },
+        {
+          "word": " lucky",
+          "start": 11.98,
+          "end": 12.36
+        },
+        {
+          "word": " accident",
+          "start": 12.36,
+          "end": 13.32
+        }
+      ]
+    },
+    {
+      "start": 13.32,
+      "end": 18.88,
+      "text": " I fold the handle twice then hide it in my sleeve so you won't see the little proof",
+      "words": [
+        {
+          "word": " I",
+          "start": 13.32,
+          "end": 13.76
+        },
+        {
+          "word": " fold",
+          "start": 13.76,
+          "end": 14.0
+        },
+        {
+          "word": " the",
+          "start": 14.0,
+          "end": 14.26
+        },
+        {
+          "word": " handle",
+          "start": 14.26,
+          "end": 14.56
+        },
+        {
+          "word": " twice",
+          "start": 14.56,
+          "end": 14.98
+        },
+        {
+          "word": " then",
+          "start": 14.98,
+          "end": 15.48
+        },
+        {
+          "word": " hide",
+          "start": 15.48,
+          "end": 15.86
+        },
+        {
+          "word": " it",
+          "start": 15.86,
+          "end": 16.12
+        },
+        {
+          "word": " in",
+          "start": 16.12,
+          "end": 16.26
+        },
+        {
+          "word": " my",
+          "start": 16.26,
+          "end": 16.4
+        },
+        {
+          "word": " sleeve",
+          "start": 16.4,
+          "end": 16.82
+        },
+        {
+          "word": " so",
+          "start": 16.82,
+          "end": 17.3
+        },
+        {
+          "word": " you",
+          "start": 17.3,
+          "end": 17.44
+        },
+        {
+          "word": " won't",
+          "start": 17.44,
+          "end": 17.68
+        },
+        {
+          "word": " see",
+          "start": 17.68,
+          "end": 17.94
+        },
+        {
+          "word": " the",
+          "start": 17.94,
+          "end": 18.22
+        },
+        {
+          "word": " little",
+          "start": 18.22,
+          "end": 18.58
+        },
+        {
+          "word": " proof",
+          "start": 18.58,
+          "end": 18.88
+        }
+      ]
+    },
+    {
+      "start": 18.88,
+      "end": 24.66,
+      "text": " I don't want you to leave I call you careless when you notice every",
+      "words": [
+        {
+          "word": " I",
+          "start": 18.88,
+          "end": 19.26
+        },
+        {
+          "word": " don't",
+          "start": 19.26,
+          "end": 19.5
+        },
+        {
+          "word": " want",
+          "start": 19.5,
+          "end": 19.74
+        },
+        {
+          "word": " you",
+          "start": 19.74,
+          "end": 19.98
+        },
+        {
+          "word": " to",
+          "start": 19.98,
+          "end": 20.14
+        },
+        {
+          "word": " leave",
+          "start": 20.14,
+          "end": 20.7
+        },
+        {
+          "word": " I",
+          "start": 20.7,
+          "end": 21.28
+        },
+        {
+          "word": " call",
+          "start": 21.28,
+          "end": 21.58
+        },
+        {
+          "word": " you",
+          "start": 21.58,
+          "end": 21.88
+        },
+        {
+          "word": " careless",
+          "start": 21.88,
+          "end": 23.04
+        },
+        {
+          "word": " when",
+          "start": 23.04,
+          "end": 23.66
+        },
+        {
+          "word": " you",
+          "start": 23.66,
+          "end": 23.78
+        },
+        {
+          "word": " notice",
+          "start": 23.78,
+          "end": 24.2
+        },
+        {
+          "word": " every",
+          "start": 24.2,
+          "end": 24.66
+        }
+      ]
+    },
+    {
+      "start": 24.66,
+      "end": 30.18,
+      "text": " Bruce, you say my name so softly that I forget what to accuse",
+      "words": [
+        {
+          "word": " Bruce,",
+          "start": 24.66,
+          "end": 25.18
+        },
+        {
+          "word": " you",
+          "start": 25.2,
+          "end": 25.28
+        },
+        {
+          "word": " say",
+          "start": 25.28,
+          "end": 25.44
+        },
+        {
+          "word": " my",
+          "start": 25.44,
+          "end": 25.62
+        },
+        {
+          "word": " name",
+          "start": 25.62,
+          "end": 25.94
+        },
+        {
+          "word": " so",
+          "start": 25.94,
+          "end": 26.36
+        },
+        {
+          "word": " softly",
+          "start": 26.36,
+          "end": 26.92
+        },
+        {
+          "word": " that",
+          "start": 26.92,
+          "end": 27.32
+        },
+        {
+          "word": " I",
+          "start": 27.32,
+          "end": 27.64
+        },
+        {
+          "word": " forget",
+          "start": 27.64,
+          "end": 28.06
+        },
+        {
+          "word": " what",
+          "start": 28.06,
+          "end": 28.56
+        },
+        {
+          "word": " to",
+          "start": 28.56,
+          "end": 28.9
+        },
+        {
+          "word": " accuse",
+          "start": 28.9,
+          "end": 30.18
+        }
+      ]
+    },
+    {
+      "start": 31.66,
+      "end": 38.3,
+      "text": " I save the last strawberry from the cake for you then told you it was sour so you wouldn't guess it's true",
+      "words": [
+        {
+          "word": " I",
+          "start": 31.48,
+          "end": 31.82
+        },
+        {
+          "word": " save",
+          "start": 31.82,
+          "end": 32.22
+        },
+        {
+          "word": " the",
+          "start": 32.22,
+          "end": 32.46
+        },
+        {
+          "word": " last",
+          "start": 32.46,
+          "end": 32.72
+        },
+        {
+          "word": " strawberry",
+          "start": 32.72,
+          "end": 33.32
+        },
+        {
+          "word": " from",
+          "start": 33.32,
+          "end": 33.66
+        },
+        {
+          "word": " the",
+          "start": 33.66,
+          "end": 33.78
+        },
+        {
+          "word": " cake",
+          "start": 33.78,
+          "end": 33.98
+        },
+        {
+          "word": " for",
+          "start": 33.98,
+          "end": 34.26
+        },
+        {
+          "word": " you",
+          "start": 34.26,
+          "end": 34.42
+        },
+        {
+          "word": " then",
+          "start": 34.42,
+          "end": 34.6
+        },
+        {
+          "word": " told",
+          "start": 34.6,
+          "end": 34.9
+        },
+        {
+          "word": " you",
+          "start": 34.9,
+          "end": 35.16
+        },
+        {
+          "word": " it",
+          "start": 35.16,
+          "end": 35.4
+        },
+        {
+          "word": " was",
+          "start": 35.4,
+          "end": 35.6
+        },
+        {
+          "word": " sour",
+          "start": 35.6,
+          "end": 35.98
+        },
+        {
+          "word": " so",
+          "start": 35.98,
+          "end": 36.36
+        },
+        {
+          "word": " you",
+          "start": 36.36,
+          "end": 36.56
+        },
+        {
+          "word": " wouldn't",
+          "start": 36.56,
+          "end": 37.3
+        },
+        {
+          "word": " guess",
+          "start": 37.3,
+          "end": 37.6
+        },
+        {
+          "word": " it's",
+          "start": 37.6,
+          "end": 38.08
+        },
+        {
+          "word": " true",
+          "start": 38.08,
+          "end": 38.3
+        }
+      ]
+    },
+    {
+      "start": 38.3,
+      "end": 45.94,
+      "text": " If I turn away it's only so you won't see how every small panic this rearrange is me",
+      "words": [
+        {
+          "word": " If",
+          "start": 38.3,
+          "end": 38.88
+        },
+        {
+          "word": " I",
+          "start": 38.88,
+          "end": 39.16
+        },
+        {
+          "word": " turn",
+          "start": 39.16,
+          "end": 39.52
+        },
+        {
+          "word": " away",
+          "start": 39.52,
+          "end": 39.96
+        },
+        {
+          "word": " it's",
+          "start": 39.96,
+          "end": 40.28
+        },
+        {
+          "word": " only",
+          "start": 40.28,
+          "end": 40.58
+        },
+        {
+          "word": " so",
+          "start": 40.58,
+          "end": 40.92
+        },
+        {
+          "word": " you",
+          "start": 40.92,
+          "end": 41.3
+        },
+        {
+          "word": " won't",
+          "start": 41.3,
+          "end": 41.64
+        },
+        {
+          "word": " see",
+          "start": 41.64,
+          "end": 41.82
+        },
+        {
+          "word": " how",
+          "start": 41.82,
+          "end": 42.02
+        },
+        {
+          "word": " every",
+          "start": 42.02,
+          "end": 42.44
+        },
+        {
+          "word": " small",
+          "start": 42.44,
+          "end": 42.8
+        },
+        {
+          "word": " panic",
+          "start": 42.8,
+          "end": 43.36
+        },
+        {
+          "word": " this",
+          "start": 43.36,
+          "end": 43.78
+        },
+        {
+          "word": " rearrange",
+          "start": 43.78,
+          "end": 44.9
+        },
+        {
+          "word": " is",
+          "start": 44.9,
+          "end": 45.56
+        },
+        {
+          "word": " me",
+          "start": 45.56,
+          "end": 45.94
+        }
+      ]
+    },
+    {
+      "start": 45.94,
+      "end": 53.48,
+      "text": " I don't need a gramp hooray or promises that shine just keep choosing to seep beside me",
+      "words": [
+        {
+          "word": " I",
+          "start": 45.94,
+          "end": 46.52
+        },
+        {
+          "word": " don't",
+          "start": 46.52,
+          "end": 46.86
+        },
+        {
+          "word": " need",
+          "start": 46.86,
+          "end": 47.14
+        },
+        {
+          "word": " a",
+          "start": 47.14,
+          "end": 47.38
+        },
+        {
+          "word": " gramp",
+          "start": 47.38,
+          "end": 47.9
+        },
+        {
+          "word": " hooray",
+          "start": 47.9,
+          "end": 48.76
+        },
+        {
+          "word": " or",
+          "start": 48.76,
+          "end": 49.16
+        },
+        {
+          "word": " promises",
+          "start": 49.16,
+          "end": 49.76
+        },
+        {
+          "word": " that",
+          "start": 49.76,
+          "end": 50.0
+        },
+        {
+          "word": " shine",
+          "start": 50.0,
+          "end": 50.34
+        },
+        {
+          "word": " just",
+          "start": 50.34,
+          "end": 50.62
+        },
+        {
+          "word": " keep",
+          "start": 50.62,
+          "end": 50.92
+        },
+        {
+          "word": " choosing",
+          "start": 50.92,
+          "end": 51.5
+        },
+        {
+          "word": " to",
+          "start": 51.5,
+          "end": 51.82
+        },
+        {
+          "word": " seep",
+          "start": 51.82,
+          "end": 52.36
+        },
+        {
+          "word": " beside",
+          "start": 52.36,
+          "end": 52.78
+        },
+        {
+          "word": " me",
+          "start": 52.78,
+          "end": 53.48
+        }
+      ]
+    },
+    {
+      "start": 53.48,
+      "end": 57.14,
+      "text": " And I'll keep choosing mine",
+      "words": [
+        {
+          "word": " And",
+          "start": 53.48,
+          "end": 53.88
+        },
+        {
+          "word": " I'll",
+          "start": 53.88,
+          "end": 54.18
+        },
+        {
+          "word": " keep",
+          "start": 54.18,
+          "end": 54.48
+        },
+        {
+          "word": " choosing",
+          "start": 54.48,
+          "end": 55.74
+        },
+        {
+          "word": " mine",
+          "start": 55.74,
+          "end": 57.14
+        }
+      ]
+    },
+    {
+      "start": 57.839999999999996,
+      "end": 61.68,
+      "text": " I'll memorize your train times then complain you came too soon",
+      "words": [
+        {
+          "word": " I'll",
+          "start": 57.839999999999996,
+          "end": 58.44
+        },
+        {
+          "word": " memorize",
+          "start": 58.44,
+          "end": 58.92
+        },
+        {
+          "word": " your",
+          "start": 58.92,
+          "end": 59.22
+        },
+        {
+          "word": " train",
+          "start": 59.22,
+          "end": 59.44
+        },
+        {
+          "word": " times",
+          "start": 59.44,
+          "end": 59.86
+        },
+        {
+          "word": " then",
+          "start": 59.86,
+          "end": 59.98
+        },
+        {
+          "word": " complain",
+          "start": 59.98,
+          "end": 60.3
+        },
+        {
+          "word": " you",
+          "start": 60.3,
+          "end": 60.6
+        },
+        {
+          "word": " came",
+          "start": 60.6,
+          "end": 60.86
+        },
+        {
+          "word": " too",
+          "start": 60.86,
+          "end": 61.22
+        },
+        {
+          "word": " soon",
+          "start": 61.22,
+          "end": 61.68
+        }
+      ]
+    },
+    {
+      "start": 61.68,
+      "end": 65.0,
+      "text": " I leave the porch like burning underneath the paper mud",
+      "words": [
+        {
+          "word": " I",
+          "start": 61.68,
+          "end": 61.9
+        },
+        {
+          "word": " leave",
+          "start": 61.9,
+          "end": 62.16
+        },
+        {
+          "word": " the",
+          "start": 62.16,
+          "end": 62.42
+        },
+        {
+          "word": " porch",
+          "start": 62.42,
+          "end": 62.6
+        },
+        {
+          "word": " like",
+          "start": 62.6,
+          "end": 62.88
+        },
+        {
+          "word": " burning",
+          "start": 62.88,
+          "end": 63.24
+        },
+        {
+          "word": " underneath",
+          "start": 63.24,
+          "end": 63.82
+        },
+        {
+          "word": " the",
+          "start": 63.82,
+          "end": 64.24
+        },
+        {
+          "word": " paper",
+          "start": 64.24,
+          "end": 64.6
+        },
+        {
+          "word": " mud",
+          "start": 64.6,
+          "end": 65.0
+        }
+      ]
+    },
+    {
+      "start": 65.0,
+      "end": 72.68,
+      "text": " When winter finds your fingers I land you my warm gloves then swear they're much too itchy for somebody that I",
+      "words": [
+        {
+          "word": " When",
+          "start": 65.0,
+          "end": 65.48
+        },
+        {
+          "word": " winter",
+          "start": 65.48,
+          "end": 65.9
+        },
+        {
+          "word": " finds",
+          "start": 65.9,
+          "end": 66.28
+        },
+        {
+          "word": " your",
+          "start": 66.28,
+          "end": 66.5
+        },
+        {
+          "word": " fingers",
+          "start": 66.5,
+          "end": 66.88
+        },
+        {
+          "word": " I",
+          "start": 66.88,
+          "end": 67.36
+        },
+        {
+          "word": " land",
+          "start": 67.36,
+          "end": 67.6
+        },
+        {
+          "word": " you",
+          "start": 67.6,
+          "end": 67.84
+        },
+        {
+          "word": " my",
+          "start": 67.84,
+          "end": 68.14
+        },
+        {
+          "word": " warm",
+          "start": 68.14,
+          "end": 68.58
+        },
+        {
+          "word": " gloves",
+          "start": 68.58,
+          "end": 68.88
+        },
+        {
+          "word": " then",
+          "start": 68.88,
+          "end": 69.1
+        },
+        {
+          "word": " swear",
+          "start": 69.1,
+          "end": 69.38
+        },
+        {
+          "word": " they're",
+          "start": 69.38,
+          "end": 69.72
+        },
+        {
+          "word": " much",
+          "start": 69.72,
+          "end": 69.9
+        },
+        {
+          "word": " too",
+          "start": 69.9,
+          "end": 70.14
+        },
+        {
+          "word": " itchy",
+          "start": 70.14,
+          "end": 70.44
+        },
+        {
+          "word": " for",
+          "start": 70.44,
+          "end": 70.86
+        },
+        {
+          "word": " somebody",
+          "start": 70.86,
+          "end": 71.18
+        },
+        {
+          "word": " that",
+          "start": 71.18,
+          "end": 71.76
+        },
+        {
+          "word": " I",
+          "start": 71.76,
+          "end": 72.68
+        }
+      ]
+    },
+    {
+      "start": 72.68,
+      "end": 75.92,
+      "text": " You ask me why I'm waiting by the gate at quarter past eight",
+      "words": [
+        {
+          "word": " You",
+          "start": 72.68,
+          "end": 73.2
+        },
+        {
+          "word": " ask",
+          "start": 73.2,
+          "end": 73.36
+        },
+        {
+          "word": " me",
+          "start": 73.36,
+          "end": 73.48
+        },
+        {
+          "word": " why",
+          "start": 73.48,
+          "end": 73.62
+        },
+        {
+          "word": " I'm",
+          "start": 73.62,
+          "end": 73.84
+        },
+        {
+          "word": " waiting",
+          "start": 73.84,
+          "end": 74.0
+        },
+        {
+          "word": " by",
+          "start": 74.0,
+          "end": 74.24
+        },
+        {
+          "word": " the",
+          "start": 74.24,
+          "end": 74.38
+        },
+        {
+          "word": " gate",
+          "start": 74.38,
+          "end": 74.6
+        },
+        {
+          "word": " at",
+          "start": 74.6,
+          "end": 75.04
+        },
+        {
+          "word": " quarter",
+          "start": 75.04,
+          "end": 75.22
+        },
+        {
+          "word": " past",
+          "start": 75.22,
+          "end": 75.52
+        },
+        {
+          "word": " eight",
+          "start": 75.52,
+          "end": 75.92
+        }
+      ]
+    },
+    {
+      "start": 75.92,
+      "end": 79.84,
+      "text": " I say I hate the quiet here don't make me say I stayed",
+      "words": [
+        {
+          "word": " I",
+          "start": 75.92,
+          "end": 76.36
+        },
+        {
+          "word": " say",
+          "start": 76.36,
+          "end": 76.7
+        },
+        {
+          "word": " I",
+          "start": 76.7,
+          "end": 77.04
+        },
+        {
+          "word": " hate",
+          "start": 77.04,
+          "end": 77.24
+        },
+        {
+          "word": " the",
+          "start": 77.24,
+          "end": 77.38
+        },
+        {
+          "word": " quiet",
+          "start": 77.38,
+          "end": 77.78
+        },
+        {
+          "word": " here",
+          "start": 77.78,
+          "end": 78.16
+        },
+        {
+          "word": " don't",
+          "start": 78.16,
+          "end": 78.36
+        },
+        {
+          "word": " make",
+          "start": 78.36,
+          "end": 78.54
+        },
+        {
+          "word": " me",
+          "start": 78.54,
+          "end": 78.74
+        },
+        {
+          "word": " say",
+          "start": 78.74,
+          "end": 78.96
+        },
+        {
+          "word": " I",
+          "start": 78.96,
+          "end": 79.14
+        },
+        {
+          "word": " stayed",
+          "start": 79.14,
+          "end": 79.84
+        }
+      ]
+    },
+    {
+      "start": 79.84,
+      "end": 87.44,
+      "text": " I save the last strawberry from the cake for you then told you it was sour so you wouldn't guess it's true",
+      "words": [
+        {
+          "word": " I",
+          "start": 79.84,
+          "end": 80.92
+        },
+        {
+          "word": " save",
+          "start": 80.92,
+          "end": 81.3
+        },
+        {
+          "word": " the",
+          "start": 81.3,
+          "end": 81.54
+        },
+        {
+          "word": " last",
+          "start": 81.54,
+          "end": 81.8
+        },
+        {
+          "word": " strawberry",
+          "start": 81.8,
+          "end": 82.46
+        },
+        {
+          "word": " from",
+          "start": 82.46,
+          "end": 82.74
+        },
+        {
+          "word": " the",
+          "start": 82.74,
+          "end": 82.86
+        },
+        {
+          "word": " cake",
+          "start": 82.86,
+          "end": 83.06
+        },
+        {
+          "word": " for",
+          "start": 83.06,
+          "end": 83.34
+        },
+        {
+          "word": " you",
+          "start": 83.34,
+          "end": 83.48
+        },
+        {
+          "word": " then",
+          "start": 83.48,
+          "end": 83.7
+        },
+        {
+          "word": " told",
+          "start": 83.7,
+          "end": 84.0
+        },
+        {
+          "word": " you",
+          "start": 84.0,
+          "end": 84.26
+        },
+        {
+          "word": " it",
+          "start": 84.26,
+          "end": 84.48
+        },
+        {
+          "word": " was",
+          "start": 84.48,
+          "end": 84.68
+        },
+        {
+          "word": " sour",
+          "start": 84.68,
+          "end": 85.12
+        },
+        {
+          "word": " so",
+          "start": 85.12,
+          "end": 85.44
+        },
+        {
+          "word": " you",
+          "start": 85.44,
+          "end": 85.62
+        },
+        {
+          "word": " wouldn't",
+          "start": 85.62,
+          "end": 86.4
+        },
+        {
+          "word": " guess",
+          "start": 86.4,
+          "end": 86.7
+        },
+        {
+          "word": " it's",
+          "start": 86.7,
+          "end": 87.14
+        },
+        {
+          "word": " true",
+          "start": 87.14,
+          "end": 87.44
+        }
+      ]
+    },
+    {
+      "start": 87.44,
+      "end": 95.06,
+      "text": " If I turn away it's only so you won't see how every small panic this rearrange is me",
+      "words": [
+        {
+          "word": " If",
+          "start": 87.44,
+          "end": 87.96
+        },
+        {
+          "word": " I",
+          "start": 87.96,
+          "end": 88.22
+        },
+        {
+          "word": " turn",
+          "start": 88.22,
+          "end": 88.56
+        },
+        {
+          "word": " away",
+          "start": 88.56,
+          "end": 89.06
+        },
+        {
+          "word": " it's",
+          "start": 89.06,
+          "end": 89.38
+        },
+        {
+          "word": " only",
+          "start": 89.38,
+          "end": 89.66
+        },
+        {
+          "word": " so",
+          "start": 89.66,
+          "end": 90.02
+        },
+        {
+          "word": " you",
+          "start": 90.02,
+          "end": 90.36
+        },
+        {
+          "word": " won't",
+          "start": 90.36,
+          "end": 90.68
+        },
+        {
+          "word": " see",
+          "start": 90.68,
+          "end": 90.9
+        },
+        {
+          "word": " how",
+          "start": 90.9,
+          "end": 91.1
+        },
+        {
+          "word": " every",
+          "start": 91.1,
+          "end": 91.52
+        },
+        {
+          "word": " small",
+          "start": 91.52,
+          "end": 91.86
+        },
+        {
+          "word": " panic",
+          "start": 91.86,
+          "end": 92.44
+        },
+        {
+          "word": " this",
+          "start": 92.44,
+          "end": 92.98
+        },
+        {
+          "word": " rearrange",
+          "start": 92.98,
+          "end": 94.02
+        },
+        {
+          "word": " is",
+          "start": 94.02,
+          "end": 94.7
+        },
+        {
+          "word": " me",
+          "start": 94.7,
+          "end": 95.06
+        }
+      ]
+    },
+    {
+      "start": 95.06,
+      "end": 102.64,
+      "text": " I don't need a gramp hooray or promises that shine just keep choosing to seep beside me",
+      "words": [
+        {
+          "word": " I",
+          "start": 95.06,
+          "end": 95.6
+        },
+        {
+          "word": " don't",
+          "start": 95.6,
+          "end": 95.94
+        },
+        {
+          "word": " need",
+          "start": 95.94,
+          "end": 96.2
+        },
+        {
+          "word": " a",
+          "start": 96.2,
+          "end": 96.46
+        },
+        {
+          "word": " gramp",
+          "start": 96.46,
+          "end": 97.12
+        },
+        {
+          "word": " hooray",
+          "start": 97.12,
+          "end": 97.76
+        },
+        {
+          "word": " or",
+          "start": 97.76,
+          "end": 98.22
+        },
+        {
+          "word": " promises",
+          "start": 98.22,
+          "end": 98.84
+        },
+        {
+          "word": " that",
+          "start": 98.84,
+          "end": 99.1
+        },
+        {
+          "word": " shine",
+          "start": 99.1,
+          "end": 99.46
+        },
+        {
+          "word": " just",
+          "start": 99.46,
+          "end": 99.72
+        },
+        {
+          "word": " keep",
+          "start": 99.72,
+          "end": 100.0
+        },
+        {
+          "word": " choosing",
+          "start": 100.0,
+          "end": 100.56
+        },
+        {
+          "word": " to",
+          "start": 100.56,
+          "end": 100.94
+        },
+        {
+          "word": " seep",
+          "start": 100.94,
+          "end": 101.42
+        },
+        {
+          "word": " beside",
+          "start": 101.42,
+          "end": 101.88
+        },
+        {
+          "word": " me",
+          "start": 101.88,
+          "end": 102.64
+        }
+      ]
+    },
+    {
+      "start": 102.64,
+      "end": 106.64,
+      "text": " And I'll keep choosing mine",
+      "words": [
+        {
+          "word": " And",
+          "start": 102.64,
+          "end": 102.98
+        },
+        {
+          "word": " I'll",
+          "start": 102.98,
+          "end": 103.34
+        },
+        {
+          "word": " keep",
+          "start": 103.34,
+          "end": 103.56
+        },
+        {
+          "word": " choosing",
+          "start": 103.56,
+          "end": 104.88
+        },
+        {
+          "word": " mine",
+          "start": 104.88,
+          "end": 106.64
+        }
+      ]
+    },
+    {
+      "start": 107.2,
+      "end": 110.56,
+      "text": " Listen don't laugh don't make me take it back",
+      "words": [
+        {
+          "word": " Listen",
+          "start": 107.2,
+          "end": 107.68
+        },
+        {
+          "word": " don't",
+          "start": 107.68,
+          "end": 108.34
+        },
+        {
+          "word": " laugh",
+          "start": 108.34,
+          "end": 108.64
+        },
+        {
+          "word": " don't",
+          "start": 108.64,
+          "end": 109.26
+        },
+        {
+          "word": " make",
+          "start": 109.26,
+          "end": 109.46
+        },
+        {
+          "word": " me",
+          "start": 109.46,
+          "end": 109.66
+        },
+        {
+          "word": " take",
+          "start": 109.66,
+          "end": 109.96
+        },
+        {
+          "word": " it",
+          "start": 109.96,
+          "end": 110.14
+        },
+        {
+          "word": " back",
+          "start": 110.14,
+          "end": 110.56
+        }
+      ]
+    },
+    {
+      "start": 110.56,
+      "end": 117.76,
+      "text": " I practice these four words until they lost the shape when your day is heavy bring it to my door",
+      "words": [
+        {
+          "word": " I",
+          "start": 110.56,
+          "end": 110.96
+        },
+        {
+          "word": " practice",
+          "start": 110.96,
+          "end": 111.44
+        },
+        {
+          "word": " these",
+          "start": 111.44,
+          "end": 111.74
+        },
+        {
+          "word": " four",
+          "start": 111.74,
+          "end": 112.16
+        },
+        {
+          "word": " words",
+          "start": 112.16,
+          "end": 112.58
+        },
+        {
+          "word": " until",
+          "start": 112.58,
+          "end": 113.06
+        },
+        {
+          "word": " they",
+          "start": 113.06,
+          "end": 113.32
+        },
+        {
+          "word": " lost",
+          "start": 113.32,
+          "end": 113.54
+        },
+        {
+          "word": " the",
+          "start": 113.54,
+          "end": 113.76
+        },
+        {
+          "word": " shape",
+          "start": 113.76,
+          "end": 114.14
+        },
+        {
+          "word": " when",
+          "start": 114.14,
+          "end": 114.54
+        },
+        {
+          "word": " your",
+          "start": 114.54,
+          "end": 114.74
+        },
+        {
+          "word": " day",
+          "start": 114.74,
+          "end": 115.2
+        },
+        {
+          "word": " is",
+          "start": 115.2,
+          "end": 115.58
+        },
+        {
+          "word": " heavy",
+          "start": 115.58,
+          "end": 116.02
+        },
+        {
+          "word": " bring",
+          "start": 116.02,
+          "end": 116.4
+        },
+        {
+          "word": " it",
+          "start": 116.4,
+          "end": 116.68
+        },
+        {
+          "word": " to",
+          "start": 116.68,
+          "end": 116.98
+        },
+        {
+          "word": " my",
+          "start": 116.98,
+          "end": 117.36
+        },
+        {
+          "word": " door",
+          "start": 117.36,
+          "end": 117.76
+        }
+      ]
+    },
+    {
+      "start": 117.76,
+      "end": 121.32,
+      "text": " You don't have to earn the place I've kept for you before",
+      "words": [
+        {
+          "word": " You",
+          "start": 117.76,
+          "end": 118.22
+        },
+        {
+          "word": " don't",
+          "start": 118.22,
+          "end": 118.32
+        },
+        {
+          "word": " have",
+          "start": 118.32,
+          "end": 118.56
+        },
+        {
+          "word": " to",
+          "start": 118.56,
+          "end": 118.8
+        },
+        {
+          "word": " earn",
+          "start": 118.8,
+          "end": 119.06
+        },
+        {
+          "word": " the",
+          "start": 119.06,
+          "end": 119.22
+        },
+        {
+          "word": " place",
+          "start": 119.22,
+          "end": 119.44
+        },
+        {
+          "word": " I've",
+          "start": 119.44,
+          "end": 120.12
+        },
+        {
+          "word": " kept",
+          "start": 120.12,
+          "end": 120.32
+        },
+        {
+          "word": " for",
+          "start": 120.32,
+          "end": 120.62
+        },
+        {
+          "word": " you",
+          "start": 120.62,
+          "end": 120.82
+        },
+        {
+          "word": " before",
+          "start": 120.82,
+          "end": 121.32
+        }
+      ]
+    },
+    {
+      "start": 121.32,
+      "end": 126.14,
+      "text": " And if my voice goes small please understand",
+      "words": [
+        {
+          "word": " And",
+          "start": 121.32,
+          "end": 121.9
+        },
+        {
+          "word": " if",
+          "start": 121.9,
+          "end": 122.54
+        },
+        {
+          "word": " my",
+          "start": 122.54,
+          "end": 122.8
+        },
+        {
+          "word": " voice",
+          "start": 122.8,
+          "end": 123.4
+        },
+        {
+          "word": " goes",
+          "start": 123.4,
+          "end": 123.64
+        },
+        {
+          "word": " small",
+          "start": 123.64,
+          "end": 124.06
+        },
+        {
+          "word": " please",
+          "start": 124.06,
+          "end": 124.62
+        },
+        {
+          "word": " understand",
+          "start": 124.62,
+          "end": 126.14
+        }
+      ]
+    },
+    {
+      "start": 127.32000000000001,
+      "end": 135.64,
+      "text": " I'm not pushing you away I'm reaching for your hand",
+      "words": [
+        {
+          "word": " I'm",
+          "start": 127.32000000000001,
+          "end": 128.08
+        },
+        {
+          "word": " not",
+          "start": 128.08,
+          "end": 128.2
+        },
+        {
+          "word": " pushing",
+          "start": 128.2,
+          "end": 128.88
+        },
+        {
+          "word": " you",
+          "start": 128.88,
+          "end": 129.64
+        },
+        {
+          "word": " away",
+          "start": 129.64,
+          "end": 130.32
+        },
+        {
+          "word": " I'm",
+          "start": 130.32,
+          "end": 132.02
+        },
+        {
+          "word": " reaching",
+          "start": 132.02,
+          "end": 132.42
+        },
+        {
+          "word": " for",
+          "start": 132.42,
+          "end": 133.12
+        },
+        {
+          "word": " your",
+          "start": 133.12,
+          "end": 133.48
+        },
+        {
+          "word": " hand",
+          "start": 133.48,
+          "end": 135.64
+        }
+      ]
+    },
+    {
+      "start": 135.64,
+      "end": 139.44,
+      "text": " So stay stay stay until the morning trains begin",
+      "words": [
+        {
+          "word": " So",
+          "start": 135.64,
+          "end": 136.14
+        },
+        {
+          "word": " stay",
+          "start": 136.14,
+          "end": 136.76
+        },
+        {
+          "word": " stay",
+          "start": 136.76,
+          "end": 137.52
+        },
+        {
+          "word": " stay",
+          "start": 137.52,
+          "end": 137.82
+        },
+        {
+          "word": " until",
+          "start": 137.82,
+          "end": 138.16
+        },
+        {
+          "word": " the",
+          "start": 138.16,
+          "end": 138.32
+        },
+        {
+          "word": " morning",
+          "start": 138.32,
+          "end": 138.7
+        },
+        {
+          "word": " trains",
+          "start": 138.7,
+          "end": 139.04
+        },
+        {
+          "word": " begin",
+          "start": 139.04,
+          "end": 139.44
+        }
+      ]
+    },
+    {
+      "start": 139.44,
+      "end": 143.18,
+      "text": " I drew your name and pencil then I drew it once again",
+      "words": [
+        {
+          "word": " I",
+          "start": 139.44,
+          "end": 140.04
+        },
+        {
+          "word": " drew",
+          "start": 140.04,
+          "end": 140.38
+        },
+        {
+          "word": " your",
+          "start": 140.38,
+          "end": 140.62
+        },
+        {
+          "word": " name",
+          "start": 140.62,
+          "end": 140.82
+        },
+        {
+          "word": " and",
+          "start": 140.82,
+          "end": 141.04
+        },
+        {
+          "word": " pencil",
+          "start": 141.04,
+          "end": 141.44
+        },
+        {
+          "word": " then",
+          "start": 141.44,
+          "end": 141.74
+        },
+        {
+          "word": " I",
+          "start": 141.74,
+          "end": 141.96
+        },
+        {
+          "word": " drew",
+          "start": 141.96,
+          "end": 142.2
+        },
+        {
+          "word": " it",
+          "start": 142.2,
+          "end": 142.44
+        },
+        {
+          "word": " once",
+          "start": 142.44,
+          "end": 142.74
+        },
+        {
+          "word": " again",
+          "start": 142.74,
+          "end": 143.18
+        }
+      ]
+    },
+    {
+      "start": 143.18,
+      "end": 150.32,
+      "text": " My heart is loud my pride is paper then if you call this foolish like the foolishness begin",
+      "words": [
+        {
+          "word": " My",
+          "start": 143.18,
+          "end": 143.7
+        },
+        {
+          "word": " heart",
+          "start": 143.7,
+          "end": 144.26
+        },
+        {
+          "word": " is",
+          "start": 144.26,
+          "end": 144.62
+        },
+        {
+          "word": " loud",
+          "start": 144.62,
+          "end": 144.94
+        },
+        {
+          "word": " my",
+          "start": 144.94,
+          "end": 145.5
+        },
+        {
+          "word": " pride",
+          "start": 145.5,
+          "end": 145.9
+        },
+        {
+          "word": " is",
+          "start": 145.9,
+          "end": 146.08
+        },
+        {
+          "word": " paper",
+          "start": 146.08,
+          "end": 146.36
+        },
+        {
+          "word": " then",
+          "start": 146.36,
+          "end": 146.8
+        },
+        {
+          "word": " if",
+          "start": 146.8,
+          "end": 147.1
+        },
+        {
+          "word": " you",
+          "start": 147.1,
+          "end": 147.32
+        },
+        {
+          "word": " call",
+          "start": 147.32,
+          "end": 147.68
+        },
+        {
+          "word": " this",
+          "start": 147.68,
+          "end": 148.22
+        },
+        {
+          "word": " foolish",
+          "start": 148.22,
+          "end": 148.82
+        },
+        {
+          "word": " like",
+          "start": 148.82,
+          "end": 149.08
+        },
+        {
+          "word": " the",
+          "start": 149.08,
+          "end": 149.2
+        },
+        {
+          "word": " foolishness",
+          "start": 149.2,
+          "end": 149.88
+        },
+        {
+          "word": " begin",
+          "start": 149.88,
+          "end": 150.32
+        }
+      ]
+    },
+    {
+      "start": 150.32,
+      "end": 158.66,
+      "text": " And I won't hide behind a frown I won't turn the sin to war you or the person I was saving all my ordinary days for",
+      "words": [
+        {
+          "word": " And",
+          "start": 150.32,
+          "end": 150.5
+        },
+        {
+          "word": " I",
+          "start": 150.5,
+          "end": 150.72
+        },
+        {
+          "word": " won't",
+          "start": 150.72,
+          "end": 151.06
+        },
+        {
+          "word": " hide",
+          "start": 151.06,
+          "end": 151.32
+        },
+        {
+          "word": " behind",
+          "start": 151.32,
+          "end": 151.72
+        },
+        {
+          "word": " a",
+          "start": 151.72,
+          "end": 152.08
+        },
+        {
+          "word": " frown",
+          "start": 152.08,
+          "end": 152.26
+        },
+        {
+          "word": " I",
+          "start": 152.26,
+          "end": 152.54
+        },
+        {
+          "word": " won't",
+          "start": 152.54,
+          "end": 152.9
+        },
+        {
+          "word": " turn",
+          "start": 152.9,
+          "end": 153.12
+        },
+        {
+          "word": " the",
+          "start": 153.12,
+          "end": 153.34
+        },
+        {
+          "word": " sin",
+          "start": 153.34,
+          "end": 153.52
+        },
+        {
+          "word": " to",
+          "start": 153.52,
+          "end": 153.78
+        },
+        {
+          "word": " war",
+          "start": 153.78,
+          "end": 154.06
+        },
+        {
+          "word": " you",
+          "start": 154.06,
+          "end": 154.3
+        },
+        {
+          "word": " or",
+          "start": 154.3,
+          "end": 154.56
+        },
+        {
+          "word": " the",
+          "start": 154.56,
+          "end": 154.68
+        },
+        {
+          "word": " person",
+          "start": 154.68,
+          "end": 155.06
+        },
+        {
+          "word": " I",
+          "start": 155.06,
+          "end": 155.44
+        },
+        {
+          "word": " was",
+          "start": 155.44,
+          "end": 155.58
+        },
+        {
+          "word": " saving",
+          "start": 155.58,
+          "end": 156.02
+        },
+        {
+          "word": " all",
+          "start": 156.02,
+          "end": 156.36
+        },
+        {
+          "word": " my",
+          "start": 156.36,
+          "end": 156.58
+        },
+        {
+          "word": " ordinary",
+          "start": 156.58,
+          "end": 157.06
+        },
+        {
+          "word": " days",
+          "start": 157.06,
+          "end": 158.22
+        },
+        {
+          "word": " for",
+          "start": 158.22,
+          "end": 158.66
+        }
+      ]
+    },
+    {
+      "start": 160.29999999999998,
+      "end": 168.28,
+      "text": " I save the last strawberry the sweetest one I know and this time when you take it I'll admit I saved it for you",
+      "words": [
+        {
+          "word": " I",
+          "start": 160.29999999999998,
+          "end": 160.92
+        },
+        {
+          "word": " save",
+          "start": 160.92,
+          "end": 161.3
+        },
+        {
+          "word": " the",
+          "start": 161.3,
+          "end": 161.54
+        },
+        {
+          "word": " last",
+          "start": 161.54,
+          "end": 161.84
+        },
+        {
+          "word": " strawberry",
+          "start": 161.84,
+          "end": 162.48
+        },
+        {
+          "word": " the",
+          "start": 162.48,
+          "end": 162.88
+        },
+        {
+          "word": " sweetest",
+          "start": 162.88,
+          "end": 163.5
+        },
+        {
+          "word": " one",
+          "start": 163.5,
+          "end": 163.68
+        },
+        {
+          "word": " I",
+          "start": 163.68,
+          "end": 164.0
+        },
+        {
+          "word": " know",
+          "start": 164.0,
+          "end": 164.4
+        },
+        {
+          "word": " and",
+          "start": 164.4,
+          "end": 164.72
+        },
+        {
+          "word": " this",
+          "start": 164.72,
+          "end": 165.0
+        },
+        {
+          "word": " time",
+          "start": 165.0,
+          "end": 165.3
+        },
+        {
+          "word": " when",
+          "start": 165.3,
+          "end": 165.46
+        },
+        {
+          "word": " you",
+          "start": 165.46,
+          "end": 165.6
+        },
+        {
+          "word": " take",
+          "start": 165.6,
+          "end": 165.94
+        },
+        {
+          "word": " it",
+          "start": 165.94,
+          "end": 166.18
+        },
+        {
+          "word": " I'll",
+          "start": 166.18,
+          "end": 166.48
+        },
+        {
+          "word": " admit",
+          "start": 166.48,
+          "end": 166.62
+        },
+        {
+          "word": " I",
+          "start": 166.62,
+          "end": 167.04
+        },
+        {
+          "word": " saved",
+          "start": 167.04,
+          "end": 167.4
+        },
+        {
+          "word": " it",
+          "start": 167.4,
+          "end": 167.62
+        },
+        {
+          "word": " for",
+          "start": 167.62,
+          "end": 167.9
+        },
+        {
+          "word": " you",
+          "start": 167.9,
+          "end": 168.28
+        }
+      ]
+    },
+    {
+      "start": 168.28,
+      "end": 174.3,
+      "text": " Let my cheeks become a secret neither of us has to keep some feelings growing silence",
+      "words": [
+        {
+          "word": " Let",
+          "start": 168.28,
+          "end": 168.9
+        },
+        {
+          "word": " my",
+          "start": 168.9,
+          "end": 169.16
+        },
+        {
+          "word": " cheeks",
+          "start": 169.16,
+          "end": 169.46
+        },
+        {
+          "word": " become",
+          "start": 169.46,
+          "end": 169.92
+        },
+        {
+          "word": " a",
+          "start": 169.92,
+          "end": 170.26
+        },
+        {
+          "word": " secret",
+          "start": 170.26,
+          "end": 170.58
+        },
+        {
+          "word": " neither",
+          "start": 170.58,
+          "end": 171.04
+        },
+        {
+          "word": " of",
+          "start": 171.04,
+          "end": 171.32
+        },
+        {
+          "word": " us",
+          "start": 171.32,
+          "end": 171.52
+        },
+        {
+          "word": " has",
+          "start": 171.52,
+          "end": 171.74
+        },
+        {
+          "word": " to",
+          "start": 171.74,
+          "end": 171.98
+        },
+        {
+          "word": " keep",
+          "start": 171.98,
+          "end": 172.4
+        },
+        {
+          "word": " some",
+          "start": 172.4,
+          "end": 172.8
+        },
+        {
+          "word": " feelings",
+          "start": 172.8,
+          "end": 173.38
+        },
+        {
+          "word": " growing",
+          "start": 173.38,
+          "end": 173.78
+        },
+        {
+          "word": " silence",
+          "start": 173.78,
+          "end": 174.3
+        }
+      ]
+    },
+    {
+      "start": 174.3,
+      "end": 179.98,
+      "text": " Then awake us from our sleep no gramp hooray no perfect line no promise carved in stone",
+      "words": [
+        {
+          "word": " Then",
+          "start": 174.3,
+          "end": 174.66
+        },
+        {
+          "word": " awake",
+          "start": 174.66,
+          "end": 175.02
+        },
+        {
+          "word": " us",
+          "start": 175.02,
+          "end": 175.26
+        },
+        {
+          "word": " from",
+          "start": 175.26,
+          "end": 175.44
+        },
+        {
+          "word": " our",
+          "start": 175.44,
+          "end": 175.66
+        },
+        {
+          "word": " sleep",
+          "start": 175.66,
+          "end": 175.96
+        },
+        {
+          "word": " no",
+          "start": 175.96,
+          "end": 176.54
+        },
+        {
+          "word": " gramp",
+          "start": 176.54,
+          "end": 176.96
+        },
+        {
+          "word": " hooray",
+          "start": 176.96,
+          "end": 177.3
+        },
+        {
+          "word": " no",
+          "start": 177.3,
+          "end": 177.5
+        },
+        {
+          "word": " perfect",
+          "start": 177.5,
+          "end": 177.9
+        },
+        {
+          "word": " line",
+          "start": 177.9,
+          "end": 178.26
+        },
+        {
+          "word": " no",
+          "start": 178.26,
+          "end": 178.42
+        },
+        {
+          "word": " promise",
+          "start": 178.42,
+          "end": 178.86
+        },
+        {
+          "word": " carved",
+          "start": 178.86,
+          "end": 179.22
+        },
+        {
+          "word": " in",
+          "start": 179.22,
+          "end": 179.44
+        },
+        {
+          "word": " stone",
+          "start": 179.44,
+          "end": 179.98
+        }
+      ]
+    },
+    {
+      "start": 179.98,
+      "end": 187.24,
+      "text": " Just your shoulder next to my making anywhere feel home tomorrow I may tease you just to keep my balance true",
+      "words": [
+        {
+          "word": " Just",
+          "start": 179.98,
+          "end": 180.5
+        },
+        {
+          "word": " your",
+          "start": 180.5,
+          "end": 180.7
+        },
+        {
+          "word": " shoulder",
+          "start": 180.7,
+          "end": 181.08
+        },
+        {
+          "word": " next",
+          "start": 181.08,
+          "end": 181.42
+        },
+        {
+          "word": " to",
+          "start": 181.42,
+          "end": 181.62
+        },
+        {
+          "word": " my",
+          "start": 181.62,
+          "end": 181.78
+        },
+        {
+          "word": " making",
+          "start": 181.78,
+          "end": 182.02
+        },
+        {
+          "word": " anywhere",
+          "start": 182.02,
+          "end": 182.68
+        },
+        {
+          "word": " feel",
+          "start": 182.68,
+          "end": 183.1
+        },
+        {
+          "word": " home",
+          "start": 183.1,
+          "end": 183.7
+        },
+        {
+          "word": " tomorrow",
+          "start": 183.7,
+          "end": 184.14
+        },
+        {
+          "word": " I",
+          "start": 184.14,
+          "end": 184.66
+        },
+        {
+          "word": " may",
+          "start": 184.66,
+          "end": 184.78
+        },
+        {
+          "word": " tease",
+          "start": 184.78,
+          "end": 185.16
+        },
+        {
+          "word": " you",
+          "start": 185.16,
+          "end": 185.36
+        },
+        {
+          "word": " just",
+          "start": 185.36,
+          "end": 185.62
+        },
+        {
+          "word": " to",
+          "start": 185.62,
+          "end": 185.72
+        },
+        {
+          "word": " keep",
+          "start": 185.72,
+          "end": 185.94
+        },
+        {
+          "word": " my",
+          "start": 185.94,
+          "end": 186.2
+        },
+        {
+          "word": " balance",
+          "start": 186.2,
+          "end": 186.72
+        },
+        {
+          "word": " true",
+          "start": 186.72,
+          "end": 187.24
+        }
+      ]
+    },
+    {
+      "start": 187.24,
+      "end": 192.24,
+      "text": " But bring your umbrella darling I made room here for you",
+      "words": [
+        {
+          "word": " But",
+          "start": 187.24,
+          "end": 187.56
+        },
+        {
+          "word": " bring",
+          "start": 187.56,
+          "end": 187.82
+        },
+        {
+          "word": " your",
+          "start": 187.82,
+          "end": 188.18
+        },
+        {
+          "word": " umbrella",
+          "start": 188.18,
+          "end": 188.66
+        },
+        {
+          "word": " darling",
+          "start": 188.66,
+          "end": 189.5
+        },
+        {
+          "word": " I",
+          "start": 189.5,
+          "end": 190.1
+        },
+        {
+          "word": " made",
+          "start": 190.1,
+          "end": 190.42
+        },
+        {
+          "word": " room",
+          "start": 190.42,
+          "end": 190.8
+        },
+        {
+          "word": " here",
+          "start": 190.8,
+          "end": 191.2
+        },
+        {
+          "word": " for",
+          "start": 191.2,
+          "end": 191.56
+        },
+        {
+          "word": " you",
+          "start": 191.56,
+          "end": 192.24
+        }
+      ]
+    },
+    {
+      "start": 194.34,
+      "end": 198.62,
+      "text": " Tomorrow I may tease you just to keep my balance true",
+      "words": [
+        {
+          "word": " Tomorrow",
+          "start": 194.34,
+          "end": 195.06
+        },
+        {
+          "word": " I",
+          "start": 195.06,
+          "end": 195.78
+        },
+        {
+          "word": " may",
+          "start": 195.78,
+          "end": 195.98
+        },
+        {
+          "word": " tease",
+          "start": 195.98,
+          "end": 196.42
+        },
+        {
+          "word": " you",
+          "start": 196.42,
+          "end": 196.68
+        },
+        {
+          "word": " just",
+          "start": 196.68,
+          "end": 196.94
+        },
+        {
+          "word": " to",
+          "start": 196.94,
+          "end": 197.06
+        },
+        {
+          "word": " keep",
+          "start": 197.06,
+          "end": 197.26
+        },
+        {
+          "word": " my",
+          "start": 197.26,
+          "end": 197.54
+        },
+        {
+          "word": " balance",
+          "start": 197.54,
+          "end": 198.04
+        },
+        {
+          "word": " true",
+          "start": 198.04,
+          "end": 198.62
+        }
+      ]
+    },
+    {
+      "start": 198.62,
+      "end": 205.14,
+      "text": " But bring your umbrella darling I made room here for you",
+      "words": [
+        {
+          "word": " But",
+          "start": 198.62,
+          "end": 198.92
+        },
+        {
+          "word": " bring",
+          "start": 198.92,
+          "end": 199.18
+        },
+        {
+          "word": " your",
+          "start": 199.18,
+          "end": 199.54
+        },
+        {
+          "word": " umbrella",
+          "start": 199.54,
+          "end": 200.04
+        },
+        {
+          "word": " darling",
+          "start": 200.04,
+          "end": 201.52
+        },
+        {
+          "word": " I",
+          "start": 201.52,
+          "end": 202.48
+        },
+        {
+          "word": " made",
+          "start": 202.48,
+          "end": 202.76
+        },
+        {
+          "word": " room",
+          "start": 202.76,
+          "end": 203.32
+        },
+        {
+          "word": " here",
+          "start": 203.32,
+          "end": 204.2
+        },
+        {
+          "word": " for",
+          "start": 204.2,
+          "end": 204.78
+        },
+        {
+          "word": " you",
+          "start": 204.78,
+          "end": 205.14
+        }
+      ]
+    }
+  ]
+}

@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import { Send, Heart, ChevronLeft, Settings2, Volume2, VolumeX, X } from 'lucide-react';
 import VrmAvatar from '../../components/diary/VrmAvatar';
 import Live2dAvatar from '../../components/diary/Live2dAvatar';
+import { whisperSTT } from '../../utils/whisperStt';
+import CinematicMotifs from './CinematicMotifs';
 import './ReinaPage.css';
 
 const ReinaPage = () => {
@@ -64,6 +66,18 @@ const ReinaPage = () => {
     const processedTagsRef = useRef(new Set()); // Track triggered tags for the current response
     const pendingDanceRef = useRef(null);
     const hasSpokenRef = useRef(false);
+
+    // Cinematic Motif State
+    const [activeMotif, setActiveMotif] = useState(null);
+    const activeMotifRef = useRef(null);
+
+    // Audio Sync Refs
+    const bgRef = useRef(null);
+    const lyricsRef = useRef(null);
+    const songAnalysisRef = useRef(null);
+    const lastBeatIndexRef = useRef(-1);
+    const lastWordRef = useRef("");
+    const lastLoudTimeRef = useRef(0);
 
     // Personalized Metadata
     const [actualCity, setActualCity] = useState("LOCATING...");
@@ -303,34 +317,75 @@ const ReinaPage = () => {
     }, []);
 
     useEffect(() => {
-        const isDanceAnim = animation === "kyun_dance" || animation === "dance1";
+        const isSinging = animation === "Singing";
+        const isDanceAnim = animation === "kyun_dance" || animation === "dance1" || animation === "lag_queen" || isSinging;
         
         if (isDanceAnim && dancePhase === "idle") {
+            const isLagQueen = animation === "lag_queen";
             // ── PHASE 1: STAGING (Fade in stage, glide camera, let Reina take ready pose) ──
             setDancePhase("staging");
             setRenderedDanceAnim("idle1");
 
-            if (!danceAudioRef.current) {
-                danceAudioRef.current = new Audio("/song/kyun_dance_song.mp3");
+            let songSrc = "/song/kyun_dance_song.mp3";
+            if (isSinging) {
+                songSrc = "/song/The Last Strawberry.mp3";
             }
+
+            if (!danceAudioRef.current) {
+                const audioObj = new Audio(songSrc);
+                danceAudioRef.current = audioObj;
+                try {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    const ctx = new AudioContext();
+                    const source = ctx.createMediaElementSource(audioObj);
+                    const analyser = ctx.createAnalyser();
+                    analyser.fftSize = 64;
+                    source.connect(analyser);
+                    analyser.connect(ctx.destination);
+                    danceAudioRef.current.analyser = analyser;
+                    danceAudioRef.current.dataArray = new Uint8Array(analyser.frequencyBinCount);
+                    danceAudioRef.current.ctx = ctx;
+                } catch(e) { console.warn("Analyzer setup error:", e); }
+            } else if (!danceAudioRef.current.src.endsWith(songSrc.replace(/ /g, "%20"))) {
+                danceAudioRef.current.src = songSrc;
+                danceAudioRef.current.load();
+            }
+
             const audio = danceAudioRef.current;
             audio.muted = isMuted;
-            audio.currentTime = 66.0; // 1:06 start
+            audio.currentTime = (isLagQueen || isSinging) ? 0.0 : 66.0; // Play from beginning for Lag Queen & Singing
             audio.volume = 1.0;
 
             if (danceFadeIntervalRef.current) clearInterval(danceFadeIntervalRef.current);
 
-            // ── PHASE 2: EXACT SYNC — Start song and dance animation at the EXACT SAME INSTANT ──
+            // ── PHASE 2: EXACT SYNC — Wait for animation to load before starting song ──
             const startSyncTimer = setTimeout(() => {
                 setDancePhase("dancing");
                 setRenderedDanceAnim(animation);
-                audio.play().catch(e => console.warn("Dance song play deferred:", e));
+                // Auto-play audio when dance phase starts
+                if (danceAudioRef.current && danceAudioRef.current.paused) {
+                    danceAudioRef.current.play().catch(e => console.warn('Auto-play deferred:', e));
+                }
+                if (danceAudioRef.current && danceAudioRef.current.ctx && danceAudioRef.current.ctx.state === 'suspended') {
+                    danceAudioRef.current.ctx.resume();
+                }
             }, 1000);
 
             const handleTimeUpdate = () => {
-                // Full animation length is exactly 32.70 seconds (from 66.0s to 98.70s)
-                if (audio.currentTime >= 98.7) {
-                    finishDanceSmooth();
+                if (isLagQueen) {
+                    // Lag Queen animation is ~156s long
+                    if (audio.currentTime >= 156.0 || audio.currentTime >= audio.duration - 0.5) {
+                        finishDanceSmooth();
+                    }
+                } else if (isSinging) {
+                    if (audio.duration && audio.currentTime >= audio.duration - 0.5) {
+                        finishDanceSmooth();
+                    }
+                } else {
+                    // Full kyun animation length is exactly 32.70 seconds (from 66.0s to 98.70s)
+                    if (audio.currentTime >= 98.7) {
+                        finishDanceSmooth();
+                    }
                 }
             };
 
@@ -351,7 +406,7 @@ const ReinaPage = () => {
             // Cancelled externally
             if (danceAudioRef.current) {
                 danceAudioRef.current.pause();
-                danceAudioRef.current.currentTime = 66.0;
+                danceAudioRef.current.currentTime = 0.0;
                 danceAudioRef.current.volume = 1.0;
             }
             setDancePhase("idle");
@@ -360,13 +415,199 @@ const ReinaPage = () => {
     }, [animation, isMuted, finishDanceSmooth]);
 
     useEffect(() => {
+        if (animation === "Singing") {
+            fetch('/song/The_Last_Strawberry_analysis.json')
+                .then(res => res.json())
+                .then(data => {
+                    songAnalysisRef.current = data;
+                    console.log("Loaded song analysis data with", data.beats.length, "beats.");
+                })
+                .catch(err => console.error("Error loading song analysis", err));
+        } else {
+            songAnalysisRef.current = null;
+            lastBeatIndexRef.current = -1;
+            lastWordRef.current = "";
+        }
+    }, [animation]);
+
+    useEffect(() => {
+        let rAF;
+        const syncLoop = () => {
+            if (dancePhase === "dancing" && danceAudioRef.current) {
+                const ct = danceAudioRef.current.currentTime;
+                
+                const seekBar = document.getElementById('dance-seek-bar');
+                if (seekBar && danceAudioRef.current.duration) {
+                    seekBar.value = (ct / danceAudioRef.current.duration) * 100;
+                }
+                
+                if (danceAudioRef.current.ctx && danceAudioRef.current.ctx.state === 'suspended') {
+                    danceAudioRef.current.ctx.resume().catch(e => console.warn(e));
+                }
+                
+                // REAL-TIME AUDIO REACTIVITY (Booms)
+                let bassAvg = 0;
+                let beatIndex = -1;
+                let isStrongBeat = false;
+
+                if (danceAudioRef.current.analyser && animation === "Singing") {
+                    const analyser = danceAudioRef.current.analyser;
+                    const dataArray = danceAudioRef.current.dataArray;
+                    analyser.getByteFrequencyData(dataArray);
+                    
+                    let bassSum = 0;
+                    for (let i = 0; i < 4; i++) bassSum += dataArray[i];
+                    bassAvg = bassSum / 4;
+                }
+
+                if (songAnalysisRef.current && animation === "Singing") {
+                    const beats = songAnalysisRef.current.beats;
+                    let nextBeat = lastBeatIndexRef.current + 1;
+                    if (nextBeat < beats.length && ct >= beats[nextBeat]) {
+                        beatIndex = nextBeat;
+                        lastBeatIndexRef.current = nextBeat;
+                    }
+                }
+                
+                let activeLyricText = "";
+                if (songAnalysisRef.current && animation === "Singing") {
+                    const lyrics = songAnalysisRef.current.lyrics;
+                    for (let i = 0; i < lyrics.length; i++) {
+                        if (ct >= lyrics[i].start && ct <= lyrics[i].end + 0.5) {
+                            activeLyricText = lyrics[i].text.toLowerCase();
+                            break;
+                        }
+                    }
+                }
+                
+                if (bgRef.current && animation === "Singing") {
+                    let newMotif = null;
+                    // Cinematic Narrative Visuals
+                    let targetTransform = 'scale(1)';
+                    let targetFilter = 'brightness(1) contrast(1) saturate(1)';
+                    let targetTransition = 'all 2s ease-in-out';
+                    
+                    if (activeLyricText) {
+                        if (activeLyricText.includes("leave your umbrella") || activeLyricText.includes("bring your umbrella")) newMotif = "umbrella";
+                        else if (activeLyricText.includes("strawberry")) newMotif = "strawberry";
+                        else if (activeLyricText.includes("train times")) newMotif = "train";
+                        else if (activeLyricText.includes("winter finds your fingers")) newMotif = "winter";
+                        else if (activeLyricText.includes("quarter past eight")) newMotif = "clock";
+                        else if (activeLyricText.includes("pride is paper")) newMotif = "shatter";
+                        else if (activeLyricText.includes("seep beside me") || activeLyricText.includes("kept for you before") || activeLyricText.includes("anywhere feel home")) newMotif = "spotlight";
+                        else if (activeLyricText.includes("reaching for your hand")) newMotif = "hand";
+                        else if (activeLyricText.includes("stay stay stay") || activeLyricText.includes("foolishness begin")) newMotif = "insane";
+
+                        if (activeMotifRef.current !== newMotif) {
+                            activeMotifRef.current = newMotif;
+                            setActiveMotif(newMotif);
+                        }
+                        if (activeLyricText.includes("don't want you to leave")) {
+                            targetFilter = 'brightness(1.2) contrast(1.1) saturate(1.2)';
+                            targetTransition = 'all 1.5s ease-out';
+                        } else if (activeLyricText.includes("softly that i forget")) {
+                            targetFilter = 'brightness(0.6) contrast(1.3) saturate(0.5)';
+                            targetTransform = 'scale(1.05)';
+                            targetTransition = 'all 3s ease-out';
+                        } else if (activeLyricText.includes("strawberry from the cake")) {
+                            targetFilter = 'brightness(1.2) contrast(1.1) saturate(1.4)';
+                            targetTransform = 'scale(1.02)';
+                            targetTransition = 'all 1s ease-out';
+                        } else if (activeLyricText.includes("rearrange")) {
+                            targetFilter = 'brightness(1.1) contrast(1.2) saturate(1.5)';
+                            targetTransform = 'scale(1.1)';
+                            targetTransition = 'all 1.5s cubic-bezier(0.2, 0.8, 0.2, 1)';
+                        } else if (activeLyricText.includes("seep beside me")) {
+                            targetFilter = 'brightness(1.3) contrast(1.0) saturate(1.3)';
+                            targetTransition = 'all 2.5s ease-in-out';
+                        } else if (activeLyricText.includes("itchy for somebody")) {
+                            targetFilter = 'brightness(0.7) contrast(1.5) saturate(0.2)';
+                            targetTransform = 'scale(1.01)';
+                            targetTransition = 'all 0.1s ease-out'; // Snaps instantly
+                        } else if (activeLyricText.includes("listen don't laugh") || activeLyricText.includes("reaching for your hand")) {
+                            targetFilter = 'brightness(0.5) contrast(1.2) saturate(0.8)';
+                            targetTransform = 'scale(1.08)';
+                            targetTransition = 'all 4s ease-in-out';
+                        } else if (activeLyricText.includes("stay stay stay") || activeLyricText.includes("ordinary days for")) {
+                            const intensity = bassAvg / 255;
+                            const rot = Math.sin(ct * 20) * 3; // Slight cinematic sway
+                            targetFilter = `hue-rotate(${45 + intensity*100}deg) brightness(${1.2 + intensity}) contrast(1.3) saturate(1.8)`;
+                            targetTransform = `scale(${1.05 + intensity*0.1}) rotate(${rot}deg)`;
+                            targetTransition = 'all 0.1s ease-out';
+                        } else if (activeLyricText.includes("sweetest one i know") || activeLyricText.includes("anywhere feel home") || activeLyricText.includes("bring your umbrella")) {
+                            targetFilter = 'brightness(1.2) contrast(0.9) saturate(1.2)';
+                            targetTransform = 'scale(1)';
+                            targetTransition = 'all 5s ease-in-out';
+                        }
+                    }
+
+                    bgRef.current.style.transition = targetTransition;
+                    bgRef.current.style.transform = targetTransform;
+                    bgRef.current.style.filter = targetFilter;
+                }
+
+                // CINEMATIC LYRICS (Left-side stacked buildup, removes when full)
+                if (songAnalysisRef.current && animation === "Singing" && lyricsRef.current) {
+                    const lyrics = songAnalysisRef.current.lyrics;
+                    const allSpokenWords = [];
+                    
+                    for (let i = 0; i < lyrics.length; i++) {
+                        if (lyrics[i].start <= ct + 0.5) { 
+                            if (lyrics[i].words && lyrics[i].words.length > 0) {
+                                for (let j = 0; j < lyrics[i].words.length; j++) {
+                                    if (lyrics[i].words[j].start <= ct) {
+                                        allSpokenWords.push(lyrics[i].words[j]);
+                                    }
+                                }
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    if (allSpokenWords.length > 0) {
+                        const WORDS_PER_PAGE = 10;
+                        const pageIndex = Math.floor((allSpokenWords.length - 1) / WORDS_PER_PAGE);
+                        const visibleWords = allSpokenWords.slice(pageIndex * WORDS_PER_PAGE, (pageIndex + 1) * WORDS_PER_PAGE);
+                        
+                        let html = '';
+                        for (let w of visibleWords) {
+                            const isCurrent = ct >= w.start && ct <= w.end;
+                            const isHeavy = (w.end - w.start) > 0.4;
+                            const scale = isCurrent ? (isHeavy ? 1.5 : 1.2) : 1.0;
+                            const color = isCurrent ? '#ffffff' : '#ff3388';
+                            const shadow = isCurrent ? '0 0 20px #ffffff, 0 0 40px #ffffff' : '0 0 10px #ff3388';
+                            const rot = Math.sin(w.start * 100) * 8; // -8 to 8 deg
+                            
+                            html += `<span style="display: inline-block; color: ${color}; text-shadow: ${shadow}; transform: scale(${scale}) rotate(${rot}deg); transition: all 0.1s ease-out; margin: 15px 12px; line-height: 1.3;">${w.word}</span>`;
+                        }
+                        
+                        if (lyricsRef.current.innerHTML !== html) {
+                            lyricsRef.current.innerHTML = html;
+                        }
+                    } else {
+                        if (lyricsRef.current.innerHTML !== "") {
+                            lyricsRef.current.innerHTML = "";
+                        }
+                    }
+                }
+            }
+            rAF = requestAnimationFrame(syncLoop);
+        };
+        if (dancePhase === "dancing") {
+            rAF = requestAnimationFrame(syncLoop);
+        }
+        return () => cancelAnimationFrame(rAF);
+    }, [dancePhase, animation]);
+
+    useEffect(() => {
         if (danceAudioRef.current) {
             danceAudioRef.current.muted = isMuted;
         }
     }, [isMuted]);
 
     useEffect(() => {
-        const isDanceAnim = animation === "kyun_dance" || animation === "dance1";
+        const isDanceAnim = animation === "kyun_dance" || animation === "dance1" || animation === "Singing" || animation === "lag_queen";
         if (bgmMode === "off" || vrmLoading || isDanceAnim) {
             if (bgmIntervalRef.current) clearInterval(bgmIntervalRef.current);
             return;
@@ -437,7 +678,7 @@ const ReinaPage = () => {
             const now = Date.now();
             const diff = now - lastInteractionRef.current;
 
-            const isDancing = animation === "kyun_dance" || animation === "dance1";
+            const isDancing = animation === "kyun_dance" || animation === "dance1" || animation === "Singing" || animation === "lag_queen";
             if (isTalking || vrmLoading || isDancing) {
                 lastInteractionRef.current = now;
                 return;
@@ -507,86 +748,123 @@ const ReinaPage = () => {
         }, 30000);
     }, [typeThought]);
 
-    // ─── CONTINUOUS VOICE MODE LOGIC ───
+    // ─── WHISPER TINY SPEECH-TO-TEXT CONTROLLER ───
     const [isVoiceMode, setIsVoiceMode] = useState(false);
     const [isListening, setIsListening] = useState(false);
-    const recognitionRef = useRef(null);
-    const speechTimeoutRef = useRef(null);
+    const [isTranscribing, setIsTranscribing] = useState(false);
+    const [whisperStatus, setWhisperStatus] = useState("");
+    const [micVolume, setMicVolume] = useState(0);
 
+    const isVoiceModeRef = useRef(false);
+    const isTranscribingRef = useRef(false);
+    const silenceTimeoutRef = useRef(null);
+    const hasSpokenSinceListenRef = useRef(false);
+
+    // Keep ref in sync
     useEffect(() => {
-        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-            console.warn("Speech Recognition API not supported in this browser.");
-            return;
+        isVoiceModeRef.current = isVoiceMode;
+    }, [isVoiceMode]);
+
+    const stopWhisperAndProcess = useCallback(async () => {
+        if (silenceTimeoutRef.current) clearTimeout(silenceTimeoutRef.current);
+        if (isTranscribingRef.current) return;
+
+        setIsListening(false);
+        setIsTranscribing(true);
+        isTranscribingRef.current = true;
+        setWhisperStatus("Transcribing...");
+
+        try {
+            const { text, elapsedMs } = await whisperSTT.stopRecordingAndTranscribe();
+            if (text && text.trim()) {
+                console.log(`🎙️ [Whisper Transcribed] "${text}" (${elapsedMs}ms)`);
+                setInput(text);
+                setWhisperStatus("");
+                // Auto send transcribed message
+                setTimeout(() => {
+                    handleSend(null, text);
+                }, 100);
+            } else {
+                setWhisperStatus("");
+            }
+        } catch (err) {
+            console.error("Whisper transcription error:", err);
+            setWhisperStatus("Transcription error");
+            setTimeout(() => setWhisperStatus(""), 2000);
+        } finally {
+            setIsTranscribing(false);
+            isTranscribingRef.current = false;
         }
-
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        const recognition = new SpeechRecognition();
-        recognition.continuous = true;
-        recognition.interimResults = true;
-        recognition.lang = 'en-US';
-
-        recognition.onstart = () => setIsListening(true);
-        recognition.onend = () => setIsListening(false);
-        recognition.onerror = (e) => {
-            if (e.error !== 'no-speech') console.error("Speech Recognition Error:", e.error);
-        };
-
-        recognition.onresult = (event) => {
-            let interimTranscript = '';
-            let finalTranscript = '';
-
-            for (let i = event.resultIndex; i < event.results.length; ++i) {
-                if (event.results[i].isFinal) {
-                    finalTranscript += event.results[i][0].transcript;
-                } else {
-                    interimTranscript += event.results[i][0].transcript;
-                }
-            }
-
-            const currentText = finalTranscript || interimTranscript;
-            if (currentText.trim()) {
-                setInput(currentText);
-
-                if (speechTimeoutRef.current) clearTimeout(speechTimeoutRef.current);
-                speechTimeoutRef.current = setTimeout(() => {
-                    recognition.stop(); 
-                    if (currentText.trim()) {
-                        document.getElementById('reina-hidden-submit')?.click();
-                    }
-                }, 800);
-            }
-        };
-
-        recognitionRef.current = recognition;
-
-        return () => {
-            if (recognitionRef.current) {
-                recognitionRef.current.stop();
-            }
-        };
     }, []);
 
-    useEffect(() => {
-        if (isVoiceMode && !isTalking && !isLoading && !isListening) {
-            setTimeout(() => {
-                if (recognitionRef.current && isVoiceMode) {
-                    try { recognitionRef.current.start(); } catch (e) {}
-                }
-            }, 500);
-        }
-    }, [isTalking, isLoading, isVoiceMode, isListening]);
+    const startWhisperListening = useCallback(async () => {
+        if (isListening || isTranscribingRef.current || isTalking || isLoading) return;
 
-    const toggleVoiceMode = () => {
-        setIsVoiceMode(prev => {
-            const newState = !prev;
-            if (newState && recognitionRef.current && !isTalking && !isLoading) {
-                try { recognitionRef.current.start(); } catch (e) {}
-            } else if (!newState && recognitionRef.current) {
-                recognitionRef.current.stop();
+        try {
+            hasSpokenSinceListenRef.current = false;
+            setWhisperStatus("Initializing Whisper...");
+
+            // Initialize / ensure Whisper model is ready
+            await whisperSTT.init((progress) => {
+                if (progress.status === 'downloading') {
+                    setWhisperStatus(progress.message);
+                } else if (progress.status === 'ready') {
+                    setWhisperStatus("Listening...");
+                }
+            });
+
+            setWhisperStatus("Listening...");
+            await whisperSTT.startRecording((volume) => {
+                setMicVolume(volume);
+                // Silence detection: after detecting voice, wait 1.4s of low volume to auto-process
+                if (volume > 0.06) {
+                    hasSpokenSinceListenRef.current = true;
+                    if (silenceTimeoutRef.current) clearTimeout(silenceTimeoutRef.current);
+                    silenceTimeoutRef.current = setTimeout(() => {
+                        if (hasSpokenSinceListenRef.current) {
+                            stopWhisperAndProcess();
+                        }
+                    }, 1400);
+                }
+            });
+
+            setIsListening(true);
+        } catch (err) {
+            console.error("Failed to start Whisper recording:", err);
+            setIsListening(false);
+            setWhisperStatus("Mic error");
+            setTimeout(() => setWhisperStatus(""), 2000);
+        }
+    }, [isListening, isTalking, isLoading, stopWhisperAndProcess]);
+
+    // Continuous voice loop: resume listening once Reina finishes talking
+    useEffect(() => {
+        if (isVoiceMode && !isTalking && !isLoading && !isListening && !isTranscribing) {
+            const timer = setTimeout(() => {
+                if (isVoiceModeRef.current) {
+                    startWhisperListening();
+                }
+            }, 600);
+            return () => clearTimeout(timer);
+        }
+    }, [isVoiceMode, isTalking, isLoading, isListening, isTranscribing, startWhisperListening]);
+
+    const toggleVoiceMode = useCallback(() => {
+        if (isVoiceMode) {
+            setIsVoiceMode(false);
+            isVoiceModeRef.current = false;
+            if (isListening) {
+                stopWhisperAndProcess();
+            } else {
+                whisperSTT.cancelRecording();
             }
-            return newState;
-        });
-    };
+            setWhisperStatus("");
+        } else {
+            setIsVoiceMode(true);
+            isVoiceModeRef.current = true;
+            startWhisperListening();
+        }
+    }, [isVoiceMode, isListening, startWhisperListening, stopWhisperAndProcess]);
 
     // Psychological Dread Loading Sequence Engine
     useEffect(() => {
@@ -717,6 +995,22 @@ const ReinaPage = () => {
         // VRM is ready, but we wait for the sequence to finish
     }, []);
 
+    const handleAnimationPlay = useCallback((animUrl) => {
+        if (animUrl && animUrl.includes("dance") && danceAudioRef.current) {
+            if (danceAudioRef.current.paused) {
+                console.log("💃 [ReinaPage] Animation loaded and playing! Syncing audio now...");
+                danceAudioRef.current.currentTime = 66.0;
+                danceAudioRef.current.play().catch(e => console.warn("Dance song play deferred:", e));
+            }
+        } else if (animUrl && (animUrl.includes("lag_queen") || animUrl.includes("Singing")) && danceAudioRef.current) {
+            if (danceAudioRef.current.paused) {
+                console.log("💃 [ReinaPage] Lag Queen/Singing animation loaded and playing! Syncing audio now...");
+                danceAudioRef.current.currentTime = 0.0;
+                danceAudioRef.current.play().catch(e => console.warn("Dance song play deferred:", e));
+            }
+        }
+    }, []);
+
     // Safety fallback timeout to ensure loading screen never hangs permanently
     useEffect(() => {
         if (vrmLoading) {
@@ -776,15 +1070,22 @@ const ReinaPage = () => {
         if (!audioCtxRef.current) initAudio();
         const ctx = audioCtxRef.current;
         
-        // Use a persistent Source node if possible, or create fresh
-        const source = ctx.createMediaElementSource(audioElement);
+        let source = audioElement.sourceNode;
+        if (!source) {
+            source = ctx.createMediaElementSource(audioElement);
+            audioElement.sourceNode = source;
+        }
+        
         if (!analyserRef.current) {
             analyserRef.current = ctx.createAnalyser();
             analyserRef.current.fftSize = 64;
         }
         
-        source.connect(analyserRef.current);
-        analyserRef.current.connect(ctx.destination); // 🏁 KEY: Connect to speakers!
+        if (!audioElement.isConnectedToCtx) {
+            source.connect(analyserRef.current);
+            analyserRef.current.connect(ctx.destination);
+            audioElement.isConnectedToCtx = true;
+        }
 
         const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
         const update = () => {
@@ -1253,11 +1554,11 @@ MANDATORY: START your response with <MOVE index="N" />.`;
         }
     };
 
-    const handleSend = async (e) => {
+    const handleSend = async (e, customText = null) => {
         e?.preventDefault();
-        if (!input.trim() || isLoading) return;
+        const userMsg = (customText !== null && typeof customText === 'string') ? customText.trim() : input.trim();
+        if (!userMsg || isLoading) return;
 
-        const userMsg = input;
         console.log("User Input:", userMsg);
         setMessages(prev => [...prev, { sender: 'user', text: userMsg }]);
         setInput("");
@@ -1285,7 +1586,12 @@ MANDATORY: START your response with <MOVE index="N" />.`;
             /(?:please\s+)?dance(?:\s+for\s+me)?|dance\s+for\s+me|can\s+you\s+dance|do\s+a\s+dance|wanna\s+dance|踊って|ダンスして|おどって|kyun\s*dance/i.test(userMsg) &&
             !/(?:dance\s+(?:was|is)|great\s+dance|nice\s+dance|loved?\s+(?:the|your)\s+dance|good\s+dance|thanks?\s+for\s+the\s+dance|after\s+the\s+dance|that\s+dance|cool\s+dance|amazing\s+dance)/i.test(userMsg)
         );
-        if (isDanceRequest) {
+        const isLagQueenRequest = /(?:lag\s*queen|lag\s*dance|do\s*the\s*lag)/i.test(userMsg);
+
+        if (isLagQueenRequest) {
+            pendingDanceRef.current = "lag_queen";
+            console.log("💃 [Reina] Lag Queen dance request detected.");
+        } else if (isDanceRequest) {
             pendingDanceRef.current = "kyun_dance";
             console.log("💃 [Reina] Explicit dance request detected in user prompt, queued pending dance.");
         }
@@ -1636,7 +1942,7 @@ MANDATORY: START your response with <MOVE index="N" />.`;
         resetIdleTimer(); // Hide thoughts when user types
     };
 
-    const isDancing = dancePhase !== "idle" || animation === "kyun_dance" || animation === "dance1";
+    const isDancing = dancePhase !== "idle" || animation === "kyun_dance" || animation === "dance1" || animation === "Singing" || animation === "lag_queen";
 
     const neonFlowers = React.useMemo(() => {
         if (!isDancing) return [];
@@ -1655,33 +1961,104 @@ MANDATORY: START your response with <MOVE index="N" />.`;
         <div className={`reina-page ${isDancing ? 'dance-cinematic-mode' : ''} ${isPostLoadGlitch ? 'active-glitch' : ''} ${isLocked ? 'locked-shake' : ''}`}>
              {isWhiteout && <div className="reveal-whiteout" />}
              
+            {isDancing && animation === "Singing" && (
+                <div 
+                    ref={lyricsRef}
+                    style={{
+                        position: 'absolute',
+                        top: '20%',
+                        left: 0,
+                        width: '40%',
+                        height: '60%',
+                        display: 'flex',
+                        flexDirection: 'row',
+                        flexWrap: 'wrap',
+                        alignContent: 'center',
+                        alignItems: 'center',
+                        justifyContent: 'flex-start',
+                        padding: 0,
+                        paddingLeft: '12%',
+                        fontSize: '50px',
+                        fontWeight: 'bold',
+                        fontFamily: "'Cinzel', serif",
+                        zIndex: 50,
+                        pointerEvents: 'none',
+                        boxSizing: 'border-box'
+                    }}
+                />
+            )}
+
             {isDancing && (
-                <button 
-                    className="dance-exit-btn" 
-                    onClick={finishDanceSmooth}
-                    title="Stop Dance"
-                >
-                    <Heart size={22} fill="#ff4b8d" color="#ffffff" />
-                </button>
+                <>
+                    <button 
+                        className="dance-exit-btn" 
+                        onClick={finishDanceSmooth}
+                        title="Stop Dance"
+                    >
+                        <Heart size={22} fill="#ff4b8d" color="#ffffff" />
+                    </button>
+                    
+                    {/* Cinematic Seek Bar */}
+                    <div style={{ 
+                        position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', 
+                        zIndex: 1000, display: 'flex', alignItems: 'center', gap: '15px', 
+                        background: 'rgba(0,0,0,0.6)', padding: '10px 20px', borderRadius: '30px',
+                        backdropFilter: 'blur(5px)', border: '1px solid rgba(255,255,255,0.1)'
+                    }}>
+                        <span style={{ color: 'white', fontSize: '12px', fontWeight: 'bold' }}>SEEK</span>
+                        <input 
+                            type="range" 
+                            min="0" 
+                            max="100" 
+                            defaultValue="0" 
+                            id="dance-seek-bar"
+                            style={{ width: '400px', cursor: 'pointer', accentColor: '#ff4b8d' }}
+                            onChange={(e) => {
+                                if (danceAudioRef.current && danceAudioRef.current.duration) {
+                                    const targetTime = (e.target.value / 100) * danceAudioRef.current.duration;
+                                    danceAudioRef.current.currentTime = targetTime;
+                                    if (lyricsRef.current) lyricsRef.current.innerHTML = "";
+                                    // Resume audio after seeking
+                                    if (danceAudioRef.current.paused) {
+                                        danceAudioRef.current.play().catch(err => console.warn('Seek play error:', err));
+                                    }
+                                    if (danceAudioRef.current.ctx && danceAudioRef.current.ctx.state === 'suspended') {
+                                        danceAudioRef.current.ctx.resume();
+                                    }
+                                }
+                            }}
+                        />
+                    </div>
+                </>
             )}
 
             {/* Dance Stage Background Overlay and Neon Flowers */}
-            <div className="dance-stage-bg">
-                {isDancing && neonFlowers.map(flower => (
-                    <div 
-                        key={flower.id} 
-                        className={`neon-shape-container anim-${flower.dir}`}
-                        style={{
-                            left: flower.left,
-                            animationDuration: flower.duration,
-                            animationDelay: flower.delay,
-                            transform: `scale(${flower.scale})`
-                        }}
-                    >
-                        <div className={`neon-shape shape-${flower.type}`}></div>
-                    </div>
-                ))}
+            <div className={`dance-stage-bg motif-${activeMotif || 'normal'}`} ref={bgRef} style={{ transition: 'all 0.15s ease-out', transformOrigin: 'center center' }}>
+                <div style={{ 
+                    opacity: ['hand', 'spotlight', 'shatter', 'insane', 'winter', 'moon', 'strawberry', 'train', 'umbrella'].includes(activeMotif) ? 0 : 1,
+                    transition: 'opacity 1s ease'
+                }}>
+                    {isDancing && neonFlowers.map(flower => (
+                        <div 
+                            key={flower.id} 
+                            className={`neon-shape-container anim-${flower.dir}`}
+                            style={{
+                                left: flower.left,
+                                animationDuration: flower.duration,
+                                animationDelay: flower.delay,
+                                transform: `scale(${flower.scale})`
+                            }}
+                        >
+                            <div className={`neon-shape shape-${flower.type}`}></div>
+                        </div>
+                    ))}
+                </div>
             </div>
+            
+            {/* High-Level Material/Motif Overlay */}
+            {isDancing && animation === "Singing" && (
+                <CinematicMotifs activeMotif={activeMotif} />
+            )}
 
             {/* Top bar — minimal */}
             {/* Closeness Meter */}
@@ -1733,7 +2110,7 @@ MANDATORY: START your response with <MOVE index="N" />.`;
             )}
 
             {/* Full-screen avatar */}
-            <div className="reina-avatar-wrapper">
+            <div className="reina-avatar-wrapper" style={{ zIndex: 10 }}>
                 <div className="reina-vignette-top" />
                 <div className="reina-vignette-bottom" />
                 <div className="reina-vignette-left" />
@@ -1801,28 +2178,27 @@ MANDATORY: START your response with <MOVE index="N" />.`;
                     )}
                 </div>
 
-                {modelName === "March 7th" ? (
-                    <Live2dAvatar
-                        emotion={emotion}
-                        isTalking={isTalking}
-                        peak={peak}
-                        modelPath="/models/March 7th/march 7th.model3.json"
-                        onLoad={handleVrmLoaded}
-                        onInteraction={handleAvatarInteraction}
-                    />
-                ) : (
-                    <VrmAvatar
-                        emotion={emotion}
-                        animation={dancePhase !== "idle" ? renderedDanceAnim : animation}
-                        isDancing={dancePhase !== "idle" || animation === "kyun_dance" || animation === "dance1"}
-                        isTalking={isTalking}
-                        peak={peak} 
-                        modelUrl={`/models/${modelName}.vrm`}
-                        closeness={closeness}
-                        onLoad={handleVrmLoaded}
-                        onInteraction={handleAvatarInteraction}
-                    />
-                )}
+                <div style={{ position: 'relative', zIndex: 50, width: '100%', height: '100%' }}>
+                  {modelName === "March 7th" ? (
+                      <Live2dAvatar
+                          emotion={emotion}
+                          isTalking={isTalking}
+                          peak={peak}
+                          modelPath="/models/March 7th/march 7th.model3.json"
+                          onLoad={handleVrmLoaded}
+                          onInteraction={handleAvatarInteraction}
+                      />
+                  ) : (
+                      <VrmAvatar
+                          emotion={emotion}
+                          animation={dancePhase !== "idle" ? renderedDanceAnim : animation}
+                          isDancing={dancePhase !== "idle" || animation === "kyun_dance" || animation === "dance1" || animation === "Singing" || animation === "lag_queen"}
+                          peak={peak}
+                          onLoad={handleVrmLoaded}
+                          onInteraction={handleAvatarInteraction}
+                      />
+                  )}
+                  </div>
 
             </div>
 
@@ -2006,6 +2382,8 @@ MANDATORY: START your response with <MOVE index="N" />.`;
                         </div>
                         <div className="picker-grid">
                             {[
+                                { id: "Singing", label: "🎤 Singing (The Last Strawberry)" },
+                                { id: "lag_queen", label: "💃 Lag Queen Dance" },
                                 { id: "kyun_dance", label: "💃 Kyun Kyun Dance" },
                                 { id: "dance1", label: "💃 Dance 1" },
                                 { id: "greeting", label: "👋 Greeting" },
@@ -2055,12 +2433,19 @@ MANDATORY: START your response with <MOVE index="N" />.`;
                     <form className="reina-input-glass" onSubmit={handleSend}>
                         <button
                             type="button"
-                            className={`voice-mode-toggle ${isVoiceMode ? 'active' : ''} ${isListening ? 'listening' : ''}`}
+                            className={`voice-mode-toggle ${isVoiceMode ? 'active' : ''} ${isListening ? 'listening' : ''} ${isTranscribing ? 'transcribing' : ''}`}
                             onClick={toggleVoiceMode}
-                            title="Continuous Voice Mode"
+                            title={isVoiceMode ? "Click to Stop Voice Mode" : "Click to Start Voice Mode (Whisper Tiny)"}
                             style={{
-                                background: isVoiceMode ? (isListening ? 'rgba(255,50,50,0.5)' : 'rgba(100,200,100,0.3)') : 'rgba(255,255,255,0.1)',
-                                border: 'none',
+                                background: isTranscribing 
+                                    ? 'rgba(168, 85, 247, 0.4)'
+                                    : isListening 
+                                    ? `rgba(255, 60, 100, ${0.4 + Math.min(micVolume * 1.5, 0.5)})` 
+                                    : isVoiceMode 
+                                    ? 'rgba(34, 197, 94, 0.35)' 
+                                    : 'rgba(255, 255, 255, 0.1)',
+                                border: isListening ? '1px solid rgba(255, 100, 140, 0.8)' : '1px solid rgba(255, 255, 255, 0.15)',
+                                boxShadow: isListening ? `0 0 ${10 + micVolume * 30}px rgba(255, 50, 120, 0.6)` : 'none',
                                 borderRadius: '50%',
                                 width: '36px',
                                 height: '36px',
@@ -2069,16 +2454,21 @@ MANDATORY: START your response with <MOVE index="N" />.`;
                                 justifyContent: 'center',
                                 cursor: 'pointer',
                                 marginRight: '10px',
-                                transition: 'all 0.3s ease'
+                                transition: 'all 0.2s ease',
+                                flexShrink: 0
                             }}
                         >
-                            {isListening ? '🎙️' : '🎤'}
+                            {isTranscribing ? '🧠' : (isListening ? '🎙️' : (isVoiceMode ? '🟢' : '🎤'))}
                         </button>
                         <input
                             type="text"
                             value={input}
                             onChange={handleInputChange}
-                            placeholder={selectedModel === "kira" ? "Talk to Kira..." : "Whisper to Reina..."}
+                            placeholder={
+                                whisperStatus 
+                                    ? `🎙️ ${whisperStatus}` 
+                                    : (selectedModel === "kira" ? "Talk to Kira..." : "Whisper to Reina...")
+                            }
                             disabled={isLoading}
                         />
                         <button
@@ -2257,3 +2647,7 @@ MANDATORY: START your response with <MOVE index="N" />.`;
 };
 
 export default ReinaPage;
+
+
+
+

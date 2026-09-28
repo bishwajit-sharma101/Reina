@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Sparkles } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -137,7 +137,7 @@ const EXPRESSION_PRESETS = {
 
 function lerp(a, b, t) { return a + (b - a) * t; }
 
-function VrmModel({ vrmUrl, animationUrl, emotion, customExpression = null, isTalking, peak = 0, closeness = 50, isDancing = false, onLoad, onInteraction }) {
+function VrmModel({ vrmUrl, animationUrl, emotion, customExpression = null, isTalking, peak = 0, closeness = 50, isDancing = false, onLoad, onAnimationPlay, onInteraction }) {
     const [vrm, setVrm] = useState(null);
     const mixerRef = useRef(null);
     const currentActionRef = useRef(null);
@@ -266,6 +266,10 @@ function VrmModel({ vrmUrl, animationUrl, emotion, customExpression = null, isTa
             }
             newAction.reset().fadeIn(0.6).play();
             currentActionRef.current = newAction;
+            
+            if (onAnimationPlay) {
+                onAnimationPlay(animationUrl);
+            }
         }, undefined, (err) => {
             console.warn("Animation load fallback:", animationUrl, err);
         });
@@ -406,22 +410,26 @@ function VrmModel({ vrmUrl, animationUrl, emotion, customExpression = null, isTa
             }
 
             // 4. LIP SYNC
-            try { mgr.setValue('aa', 0); } catch (e) {}
-            try { mgr.setValue('ih', isTalking ? 0 : cur.ih); } catch (e) {}
-            try { mgr.setValue('ou', 0); } catch (e) {}
-            try { mgr.setValue('ee', isTalking ? 0 : cur.ee); } catch (e) {}
-            try { mgr.setValue('oh', isTalking ? 0 : cur.oh); } catch (e) {}
+            const isSinging = animationUrl && animationUrl.includes('Singing');
+            const shouldLipSync = isTalking || isSinging;
 
-            if (isTalking) {
+            try { mgr.setValue('aa', 0); } catch (e) {}
+            try { mgr.setValue('ih', shouldLipSync ? 0 : cur.ih); } catch (e) {}
+            try { mgr.setValue('ou', 0); } catch (e) {}
+            try { mgr.setValue('ee', shouldLipSync ? 0 : cur.ee); } catch (e) {}
+            try { mgr.setValue('oh', shouldLipSync ? 0 : cur.oh); } catch (e) {}
+
+            if (shouldLipSync) {
                 const lip = lipRef.current;
                 lip.phase += delta;
                 if (lip.phase > lip.nextSwitch) {
                     const shapes = ['aa', 'ih', 'ou', 'ee', 'oh', 'aa', 'aa', 'ih'];
                     lip.currentShape = shapes[Math.floor(Math.random() * shapes.length)];
-                    lip.nextSwitch = lip.phase + 0.08 + Math.random() * 0.12;
-                    lip.intensity = 0.3 + Math.random() * 0.7;
+                    lip.nextSwitch = lip.phase + (isSinging ? 0.15 : 0.08) + Math.random() * 0.12;
+                    lip.intensity = 0.4 + Math.random() * 0.6;
                 }
-                const envelope = (0.2 + peak * 0.8) * (Math.sin(lip.phase * 8) * 0.5 + 0.5);
+                const effectivePeak = isSinging ? (Math.sin(lip.phase * 4) * 0.5 + 0.5) : peak;
+                const envelope = (0.2 + effectivePeak * 0.8) * (Math.sin(lip.phase * 8) * 0.5 + 0.5);
                 const finalVal = lip.intensity * envelope;
                 try { mgr.setValue(lip.currentShape, Math.min(finalVal, 1.0)); } catch (e) {}
             }
@@ -440,6 +448,8 @@ function VrmModel({ vrmUrl, animationUrl, emotion, customExpression = null, isTa
         <primitive object={vrm.scene} position={[0, -1.01, 0]} onPointerDown={handlePointerDown} />
     ) : null;
 }
+
+
 
 
 
@@ -499,6 +509,7 @@ export default function VrmAvatar({
     closeness = 50,
     isDancing: isDancingProp = false,
     onLoad = () => {},
+    onAnimationPlay = () => {},
     onInteraction = () => {}
 }) {
     const activeAnim = animation || "idle1";
@@ -514,7 +525,7 @@ export default function VrmAvatar({
                 <pointLight position={[0, 1.8, 1.2]} intensity={0.8} color="#ffe2d0" />
                 <pointLight position={[0, -0.8, 1]} intensity={0.4} color="#ffd4e6" />
                 
-                {/* 3D Dust/Sparkles to provide stronger parallax reference when camera moves */}
+                {/* 3D Dust/Sparkles to provide stronger parallax reference without lagging GPU */}
                 {isDancing && (
                     <Sparkles 
                         count={350} 
@@ -522,7 +533,7 @@ export default function VrmAvatar({
                         size={3.5} 
                         speed={0.6} 
                         opacity={0.4} 
-                        color="#ffffff"
+                        color="#ff3388"
                     />
                 )}
                 
@@ -536,8 +547,10 @@ export default function VrmAvatar({
                     peak={peak}
                     isDancing={isDancing}
                     onLoad={onLoad}
+                    onAnimationPlay={onAnimationPlay}
                     onInteraction={onInteraction}
                 />
+                
                 {!isDancing && <OrbitControls target={[0, 0.05, 0]} enableRotate={false} enableZoom={false} enablePan={false} />}
             </Canvas>
         </div>
