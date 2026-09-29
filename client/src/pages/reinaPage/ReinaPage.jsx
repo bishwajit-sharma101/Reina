@@ -7,19 +7,101 @@ import VrmAvatar from '../../components/diary/VrmAvatar';
 import Live2dAvatar from '../../components/diary/Live2dAvatar';
 import { whisperSTT } from '../../utils/whisperStt';
 import CinematicMotifs from './CinematicMotifs';
+import ChessGame from '../../components/games/ChessGame';
 import './ReinaPage.css';
+
+const getSessionId = () => {
+    let sid = localStorage.getItem('astrix_reina_session_id');
+    if (!sid) {
+        sid = 'reina_sess_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now();
+        localStorage.setItem('astrix_reina_session_id', sid);
+    }
+    return sid;
+};
+
+// 11 Authoritative 3D VRM Expressions (strictly matching Settings drawer)
+export const ALLOWED_VRM_EMOTIONS = new Set([
+    "neutral", "happy", "sweet", "sad", "jealous", "angry",
+    "scary_smile", "scary_smile2", "hollow", "dead", "flirty"
+]);
+
+export function sanitizeVrmEmotion(raw) {
+    if (!raw || typeof raw !== 'string') return "neutral";
+    const clean = raw.trim().toLowerCase();
+    if (ALLOWED_VRM_EMOTIONS.has(clean)) return clean;
+
+    const fallbackMap = {
+        joke: "flirty",
+        tsundere: "angry",
+        embarrassed: "jealous",
+        excited: "happy",
+        joy: "happy",
+        fun: "happy",
+        psycho: "scary_smile",
+        mad: "angry",
+        sorrow: "sad",
+        whisper: "scary_smile2",
+        dark: "scary_smile2",
+        yandere: "scary_smile2",
+        blush: "sweet",
+        crying: "sad",
+        scorn: "angry",
+        sexy: "flirty",
+        weak: "sad",
+        brat: "angry",
+        bratty: "angry",
+        adorable: "sweet"
+    };
+
+    return fallbackMap[clean] || "neutral";
+}
 
 const ReinaPage = () => {
     const navigate = useNavigate();
 
-    // Chat state
-    const [messages, setMessages] = useState([]);
+    // Chat state with persistent local storage caching
+    const [messages, setMessages] = useState(() => {
+        try {
+            const cached = localStorage.getItem('astrix_reina_chat_history');
+            if (cached) {
+                const parsed = JSON.parse(cached);
+                if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+            }
+        } catch (e) {}
+        return [];
+    });
     const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [latestAiMsg, setLatestAiMsg] = useState("");
     const [displayedAiMsg, setDisplayedAiMsg] = useState("");
     const [targetTypingText, setTargetTypingText] = useState("");
     const aiTypingTimeoutRef = useRef(null);
+
+    // Persist conversation messages locally so refresh never loses context
+    useEffect(() => {
+        if (messages && messages.length > 0) {
+            try {
+                localStorage.setItem('astrix_reina_chat_history', JSON.stringify(messages.slice(-50)));
+            } catch (e) {}
+        }
+    }, [messages]);
+
+    const handleClearMemory = async () => {
+        try {
+            const sid = getSessionId();
+            localStorage.removeItem('astrix_reina_chat_history');
+            const newSid = 'reina_sess_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now();
+            localStorage.setItem('astrix_reina_session_id', newSid);
+            setMessages([]);
+            setLatestAiMsg("");
+            setDisplayedAiMsg("");
+            await fetch('http://localhost:5000/api/v1/ai/grok/clear-history', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sessionId: sid })
+            });
+        } catch (e) {}
+    };
 
     // Avatar state
     const [isTalking, setIsTalking] = useState(false);
@@ -58,14 +140,22 @@ const ReinaPage = () => {
     const [isCountingDown, setIsCountingDown] = useState(false);
     const [countdownText, setCountdownText] = useState("");
     const [tttBoard, setTttBoard] = useState(Array(9).fill(null));
+    const tttBoardRef = useRef(Array(9).fill(null));
     const [isPlayerTurn, setIsPlayerTurn] = useState(true);
+    const isPlayerTurnRef = useRef(true);
+    const gameTypeRef = useRef(null);
     const [agentAction, setAgentAction] = useState("");
     const lockTimeoutRef = useRef(null);
     const scaryTextTimerRef = useRef(null);
     const stayReleaseTriggeredRef = useRef(false);
     const processedTagsRef = useRef(new Set()); // Track triggered tags for the current response
     const pendingDanceRef = useRef(null);
+    const userInitiatedPerformanceRef = useRef(null);
     const hasSpokenRef = useRef(false);
+
+    useEffect(() => {
+        gameTypeRef.current = gameType;
+    }, [gameType]);
 
     // Cinematic Motif State
     const [activeMotif, setActiveMotif] = useState(null);
@@ -575,7 +665,7 @@ const ReinaPage = () => {
                             const isCurrent = ct >= w.start && ct <= w.end;
                             const isHeavy = (w.end - w.start) > 0.4;
                             const scale = isCurrent ? (isHeavy ? 1.5 : 1.2) : 1.0;
-                            const color = isCurrent ? '#ffffff' : '#ff3388';
+                            const color = isCurrent ? '#ffffff' : '#38bdf8';
                             const shadow = isCurrent ? '0 0 20px #ffffff, 0 0 40px #ffffff' : '0 0 10px #ff3388';
                             const rot = Math.sin(w.start * 100) * 8; // -8 to 8 deg
                             
@@ -1031,7 +1121,7 @@ const ReinaPage = () => {
                 setIsWhiteout(true);
                 setTimeout(() => {
                     setVrmLoading(false);
-                    setEmotion("psycho"); 
+                    setEmotion("scary_smile"); 
                     setIsWhiteout(false);
                     stopDrone();
                     setTimeout(() => setEmotion("sweet"), 800); 
@@ -1112,12 +1202,13 @@ const ReinaPage = () => {
             setIsTalking(false);
             setActiveSentence("");
             
-            // 💃 Check if a dance was requested — trigger dance immediately after speech finishes!
+            // 💃 Check if a dance or song was requested — trigger performance immediately after speech finishes!
             if (pendingDanceRef.current && hasSpokenRef.current) {
                 const danceAnim = pendingDanceRef.current;
                 pendingDanceRef.current = null;
+                userInitiatedPerformanceRef.current = null;
                 hasSpokenRef.current = false;
-                console.log("💃 [Reina] Spoken intro finished! Getting ready and starting dance:", danceAnim);
+                console.log("💃 [Reina] Spoken intro finished! Getting ready and starting performance:", danceAnim);
                 setTimeout(() => {
                     setAnimation(danceAnim);
                 }, 400);
@@ -1213,8 +1304,18 @@ const ReinaPage = () => {
     };
 
     // Helper: Synthesize and Add to Queue (WITH PLACEHOLDERS FOR ORDER)
-    const synthesizeAndQueue = async (text, token) => {
-        if (!text.trim()) return;
+    const synthesizeAndQueue = async (rawText, token) => {
+        if (!rawText || typeof rawText !== 'string') return;
+        const text = rawText
+            .replace(/<OPEN_GAME[^>]*\/?>/gi, '')
+            .replace(/<MOVE[^>]*\/?>/gi, '')
+            .replace(/\[(?:emotion|exp)=[^\]]+\]/gi, '')
+            .replace(/\[(?:anim|motion)=[^\]]+\]/gi, '')
+            .replace(/\[voice=[^\]]+\]/gi, '')
+            .replace(/\[ACTION:[A-Z_]+\]/gi, '')
+            .replace(/<[^>]+>/g, '')
+            .trim();
+        if (!text) return;
         
         const task = { text, url: null };
         audioQueue.current.push(task);
@@ -1268,6 +1369,44 @@ const ReinaPage = () => {
                 task.url = "ERROR";
                 playNextInQueue();
             }
+        } else if (selectedTts === "fish") {
+            try {
+                console.log(`🐟 [Fish Audio TTS Request] Text: "${text.substring(0, 30)}..." | Voice: Osana (Li Chan)`);
+                const ttsRes = await fetch("http://localhost:5000/api/v1/ai/fish/tts", {
+                    method: "POST",
+                    headers: { 
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ text })
+                });
+
+                if (ttsRes.ok) {
+                    const contentType = ttsRes.headers.get("content-type") || "";
+                    if (contentType.includes("json")) {
+                        const json = await ttsRes.json();
+                        if (json.success === false) {
+                            console.warn("⚠️ [Fish Audio TTS] Service reported:", json.error);
+                            task.url = "ERROR";
+                            playNextInQueue();
+                            return;
+                        }
+                    }
+                    console.log(`✅ [Fish Audio TTS Success] Audio generated for text: "${text.substring(0, 30)}..."`);
+                    const blob = await ttsRes.blob();
+                    task.url = URL.createObjectURL(blob);
+                    playNextInQueue();
+                } else {
+                    const errData = await ttsRes.json().catch(() => ({}));
+                    console.error(`❌ [Fish Audio TTS Error] Status: ${ttsRes.status}`, errData.error || "");
+                    task.url = "ERROR";
+                    playNextInQueue();
+                }
+            } catch (err) {
+                console.error("Fish Audio Error:", err);
+                task.url = "ERROR";
+                playNextInQueue();
+            }
         } else {
             // Queen3 Uses Natural GET Streaming
             const v = voiceMap[voiceTag] || voiceMap.sweet;
@@ -1312,7 +1451,8 @@ const ReinaPage = () => {
             setIsPouting(false);
         }
         
-        const systemMsg = `[SYSTEM_GAME_RESULT] ダーリン played ${move}, I played ${rMove}. I ${result}!`;
+        const systemMsg = `[SYSTEM_GAME_RESULT] Darling played ${move}, I played ${rMove}. Result: I ${result}!
+CRITICAL: Respond with EXACTLY ONE short, punchy sentence (max 10-12 words) of high gamer emotion (troll him if you won, salty rage/pout if you lost, playful teasing if tied)! Max 1 line!`;
         await sendGameAction(systemMsg, `(Plays Janken: ${move})`);
     };
 
@@ -1333,7 +1473,8 @@ const ReinaPage = () => {
         if (gRes === "LOST") setConsecutiveLosses(prev => prev + 1);
         else if (gRes === "WON") { setConsecutiveLosses(0); setIsPouting(false); }
 
-        const systemMsg = `[SYSTEM_COIN_FLIP] ダーリン guessed ${guess}, Result was ${result}. I ${gRes}!`;
+        const systemMsg = `[SYSTEM_COIN_FLIP] Darling guessed ${guess}, Result was ${result}. Result: I ${gRes}!
+CRITICAL: Respond with EXACTLY ONE short, punchy sentence (max 10-12 words) of high gamer emotion (smug troll if he missed, flustered salty denial if he got lucky)! Max 1 line!`;
         await sendGameAction(systemMsg, `(Flips Coin: ${guess})`);
     };
 
@@ -1354,50 +1495,79 @@ const ReinaPage = () => {
         if (gRes === "LOST") setConsecutiveLosses(prev => prev + 1);
         else if (gRes === "WON") { setConsecutiveLosses(0); setIsPouting(false); }
 
-        const systemMsg = `[SYSTEM_NUMBER_GUESS] ダーリン guessed ${num}, My number was ${rNum}. I ${gRes}!`;
+        const systemMsg = `[SYSTEM_NUMBER_GUESS] Darling guessed ${num}, My number was ${rNum}. Result: I ${gRes}!
+CRITICAL: Respond with EXACTLY ONE short, punchy sentence (max 10-12 words) of high gamer emotion (flustered accusation of mind-reading if correct, smug teasing if wrong)! Max 1 line!`;
         await sendGameAction(systemMsg, `(Guesses Number: ${num})`);
     };
 
     const handleTttMove = async (index, turn = 'X') => {
-        console.log(`[TIC-TAC-TOE] handleTttMove called: turn=${turn}, index=${index}, isPlayerTurn=${isPlayerTurn}, isLoading=${isLoading}`);
+        console.log(`[TIC-TAC-TOE] handleTttMove called: turn=${turn}, index=${index}, isPlayerTurnRef=${isPlayerTurnRef.current}, isLoading=${isLoading}`);
         
+        const currentBoard = [...tttBoardRef.current];
+
         // Validation logic
-        if (tttBoard[index] !== null) {
-            console.log("[TIC-TAC-TOE] Move rejected: Spot already taken at index", index);
+        if (index < 0 || index > 8 || currentBoard[index] !== null) {
+            console.log("[TIC-TAC-TOE] Move rejected: Spot already taken or invalid at index", index);
             return;
         }
-        if (turn === 'X' && (isLoading || !isPlayerTurn)) {
-            console.log("[TIC-TAC-TOE] Move rejected: Player turn blocked", { isLoading, isPlayerTurn });
+        if (turn === 'X' && (isLoading || !isPlayerTurnRef.current)) {
+            console.log("[TIC-TAC-TOE] Move rejected: Player turn blocked", { isLoading, isPlayerTurn: isPlayerTurnRef.current });
             return;
         }
 
-        const newBoard = [...tttBoard];
+        const newBoard = [...currentBoard];
         newBoard[index] = turn;
+        tttBoardRef.current = newBoard;
         setTttBoard(newBoard);
         console.log("[TIC-TAC-TOE] Board Updated:", newBoard);
 
         const winner = checkWinner(newBoard);
-        if (winner || !newBoard.includes(null)) {
+        const isFull = !newBoard.includes(null);
+
+        if (winner || isFull) {
             let result = "TIED";
-            if (winner === 'X') result = "LOST"; // Reina lost
-            else if (winner === 'O') result = "WON"; // Reina won
+            if (winner === 'X') {
+                result = "LOST"; // Reina lost
+                setConsecutiveLosses(prev => prev + 1);
+                setIsPouting(true);
+            } else if (winner === 'O') {
+                result = "WON"; // Reina won
+                setConsecutiveLosses(0);
+                setIsPouting(false);
+            }
 
             setGameResult(result);
-            const systemMsg = `[SYSTEM_TIC_TAC_TOE] Game Over. Result: I ${result}. Board: ${JSON.stringify(newBoard)}`;
-            await sendGameAction(systemMsg, `(Tic-Tac-Toe: ${winner ? winner + ' wins!' : 'Draw'})`);
-            setTimeout(() => setTttBoard(Array(9).fill(null)), 4000);
+            if (turn === 'X') {
+                const systemMsg = `[SYSTEM_TIC_TAC_TOE] Game Over. Result: I ${result}. Winner: ${winner || 'Draw'}. Board: ${JSON.stringify(newBoard)}
+CRITICAL: Use ONLY one of the 11 valid emotions: neutral, happy, sweet, sad, jealous, angry, scary_smile, scary_smile2, hollow, dead, flirty.
+Respond with EXACTLY ONE short, punchy sentence (max 10-12 words) with peak gamer emotion (salty rage/pout if you lost, smug esports champion gloating if you won, or banter if draw)! Max 1 line!`;
+                await sendGameAction(systemMsg, `(Tic-Tac-Toe: ${winner ? (winner === 'X' ? 'I win!' : 'Reina wins!') : 'Draw'})`);
+            }
+
+            setTimeout(() => {
+                const empty = Array(9).fill(null);
+                tttBoardRef.current = empty;
+                setTttBoard(empty);
+                isPlayerTurnRef.current = true;
+                setIsPlayerTurn(true);
+                setGameResult(null);
+            }, 4000);
             return;
         }
 
         if (turn === 'X') {
+            isPlayerTurnRef.current = false;
             setIsPlayerTurn(false);
             const systemMsg = `[SYSTEM_TIC_TAC_TOE]
 Board: ${JSON.stringify(newBoard)}
 Available Indices: ${newBoard.map((v, i) => v === null ? i : null).filter(v => v !== null).join(', ')}
 Your Turn ('O').
-MANDATORY: START your response with <MOVE index="N" />.`;
+MANDATORY: START your response with [emotion=X][anim=X]<MOVE index="N" />.
+CRITICAL: Use ONLY one of the 11 valid facial emotions: neutral, happy, sweet, sad, jealous, angry, scary_smile, scary_smile2, hollow, dead, flirty.
+Follow the move tag with EXACTLY ONE short, punchy sentence (max 10-12 words) of high-energy gamer banter! Troll him if you block him or take center, get flustered/panicked if he corners you, or tease him! DO NOT say more than one line!`;
             await sendGameAction(systemMsg, `(Tic-Tac-Toe: I played at ${index})`);
         } else {
+            isPlayerTurnRef.current = true;
             setIsPlayerTurn(true);
         }
     };
@@ -1443,19 +1613,35 @@ MANDATORY: START your response with <MOVE index="N" />.`;
             const finalMsg = `${scoreMsg}\n${systemMsg}`;
             
             const allMsgs = [...messages, { sender: 'user', text: userVisibleMsg }];
-            const context = allMsgs.slice(-8).map(m =>
+            const context = allMsgs.slice(-16).map(m =>
                 `${m.sender === 'user' ? 'Darling' : aiName}: ${m.text}`
             ).join('\n');
+            const history = allMsgs.slice(-20).map(m => ({
+                role: m.sender === 'user' ? 'user' : 'assistant',
+                content: m.text
+            }));
+            const sid = getSessionId();
 
             const gameEndpoint = selectedModel === "kira"
                 ? 'http://localhost:5000/api/v1/ai/kira/chat'
+                : (selectedModel === "grok" || selectedModel === "grok-llm")
+                ? 'http://localhost:5000/api/v1/ai/grok/chat'
                 : 'http://localhost:5000/api/v1/ai/reina-com/chat';
-            const gameModel = selectedModel === "kira" ? "kira" : "reina-com";
+            const gameModel = selectedModel === "kira" ? "kira" : (selectedModel === "grok" || selectedModel === "grok-llm") ? "grok" : "reina-com";
 
             const response = await fetch(gameEndpoint, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ model: gameModel, message: finalMsg, context: context })
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ 
+                    model: gameModel, 
+                    message: finalMsg, 
+                    context: context,
+                    history: history,
+                    sessionId: sid
+                })
             });
 
             if (!response.ok) throw new Error("Stream failed");
@@ -1464,6 +1650,14 @@ MANDATORY: START your response with <MOVE index="N" />.`;
             const decoder = new TextDecoder();
             let fullText = "";
             let sentenceBuffer = "";
+            let sentenceCount = 0;
+            const isGameAction = typeof systemMsg === 'string' && (
+                systemMsg.includes("[SYSTEM_TIC_TAC_TOE]") || 
+                systemMsg.includes("[SYSTEM_CHESS]") ||
+                systemMsg.includes("[SYSTEM_GAME_RESULT]") || 
+                systemMsg.includes("[SYSTEM_COIN_FLIP]") || 
+                systemMsg.includes("[SYSTEM_NUMBER_GUESS]")
+            );
 
             setMessages(prev => [...prev, { sender: 'ai', text: "" }]);
             processedTagsRef.current.clear();
@@ -1475,10 +1669,17 @@ MANDATORY: START your response with <MOVE index="N" />.`;
                 fullText += chunk;
                 sentenceBuffer += chunk;
 
-                const emotionMatch = fullText.match(/\[emotion=([^\]]+)\]/);
-                if (emotionMatch) setEmotion(emotionMatch[1].trim().toLowerCase());
-                const animMatch = fullText.match(/\[anim=([^\]]+)\]/);
-                if (animMatch) setAnimation(animMatch[1]);
+                const emotionMatch = fullText.match(/\[(?:emotion|exp)=([^\]]+)\]/);
+                if (emotionMatch) {
+                    const sanitized = sanitizeVrmEmotion(emotionMatch[1]);
+                    setEmotion(sanitized);
+                }
+                const animMatch = fullText.match(/\[(?:anim|motion)=([^\]]+)\]/);
+                if (animMatch) {
+                    const req = animMatch[1].trim();
+                    const animMap = { happy: "VRMA_01", excited: "VRMA_01", nod: "VRMA_02", shake: "VRMA_06", tsundere: "angry", yandere: "VRMA_07" };
+                    setAnimation(animMap[req.toLowerCase()] || req);
+                }
 
                 if (fullText) {
                     setMessages(prev => {
@@ -1491,8 +1692,8 @@ MANDATORY: START your response with <MOVE index="N" />.`;
                 let uiText = fullText
                     .replace(/\[[^\]]+\]/g, '')
                     .replace(/<[^>]*$/g, '') // Hide partial tags
-                    .replace(/<OPEN_GAME[^>]*>/gi, '') 
-                    .replace(/<MOVE[^>]*>/gi, '') 
+                    .replace(/<OPEN_GAME[^>]*\/?>/gi, '') 
+                    .replace(/<MOVE[^>]*\/?>/gi, '') 
                     .replace(/<[^>]+>/g, '')
                     .trim();
                 if (uiText) {
@@ -1501,9 +1702,36 @@ MANDATORY: START your response with <MOVE index="N" />.`;
 
                 const sentenceEndMatch = sentenceBuffer.match(/[^。！？!?.…~♥\n]+[。！？!?.…~♥\n]/);
                 if (sentenceEndMatch) {
-                    let sentence = sentenceEndMatch[0].replace(/\[[^\]]+\]/g, '').trim();
-                    if (sentence) synthesizeAndQueue(sentence, token);
+                    let sentence = sentenceEndMatch[0];
                     sentenceBuffer = sentenceBuffer.substring(sentenceEndMatch.index + sentenceEndMatch[0].length);
+
+                    if (!isGameAction || sentenceCount === 0) {
+                        let cleanSentence = sentence
+                            .replace(/<OPEN_GAME[^>]*\/?>/gi, '')
+                            .replace(/<MOVE[^>]*\/?>/gi, '')
+                            .replace(/\[SYSTEM(?:\s+MESSAGE)?:\s*[^\]]*\]/gi, '')
+                            .replace(/\[(?:This|The|User|Response|Note|System|Assistant)[^\]]*\]/gi, '');
+
+                        if (selectedTts === "fish") {
+                            cleanSentence = cleanSentence
+                                .replace(/\[(?:emotion|exp)=[^\]]+\]/gi, '')
+                                .replace(/\[(?:anim|motion)=[^\]]+\]/gi, '')
+                                .replace(/\[voice=[^\]]+\]/gi, '')
+                                .replace(/\[ACTION:[A-Z_]+\]/gi, '');
+                        } else {
+                            cleanSentence = cleanSentence.replace(/\[[^\]]+\]/g, '');
+                        }
+
+                        cleanSentence = cleanSentence
+                            .replace(/<[^>]+>/g, '')
+                            .replace(/([\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2728}\u{1F496}])\1+/gu, '')
+                            .trim();
+
+                        if (cleanSentence) {
+                            sentenceCount++;
+                            synthesizeAndQueue(cleanSentence, token);
+                        }
+                    }
                 }
 
                 // --- 🎮 Tag Parsing ---
@@ -1512,10 +1740,17 @@ MANDATORY: START your response with <MOVE index="N" />.`;
                     console.log("[DEBUG] Game Open Tag Found:", openGameMatch[0]);
                     processedTagsRef.current.add(openGameMatch[0]);
                     const type = openGameMatch[1];
-                    setTimeout(() => {
-                        setGameType(type);
-                        setShowGame(true);
-                    }, 1000);
+                    setGameType(type);
+                    gameTypeRef.current = type;
+                    setShowGame(true);
+                    if (type === 'tictactoe') {
+                        const empty = Array(9).fill(null);
+                        tttBoardRef.current = empty;
+                        setTttBoard(empty);
+                        isPlayerTurnRef.current = true;
+                        setIsPlayerTurn(true);
+                        setGameResult(null);
+                    }
                 }
 
                 const moveMatch = fullText.match(/<MOVE[^>]*index=["']?(\d)["']?[^>]*>/i);
@@ -1525,30 +1760,41 @@ MANDATORY: START your response with <MOVE index="N" />.`;
                     let index = parseInt(moveMatch[1]);
                     
                     // --- 🧠 Illegal Move Fixer ---
-                    if (tttBoard[index] !== null) {
+                    const currentBoard = tttBoardRef.current;
+                    if (currentBoard[index] !== null) {
                         console.log(`[TIC-TAC-TOE] Reina tried illegal move at ${index}. Finding alternative...`);
-                        const available = tttBoard.map((v, i) => v === null ? i : null).filter(v => v !== null);
+                        const available = currentBoard.map((v, i) => v === null ? i : null).filter(v => v !== null);
                         if (available.length > 0) {
                             index = available[Math.floor(Math.random() * available.length)];
                             console.log(`[TIC-TAC-TOE] Redirected move to index ${index}`);
                         }
                     }
 
-                    if (gameType === 'tictactoe' && !isPlayerTurn) {
-                        handleTttMove(index, 'O');
-                    }
+                    handleTttMove(index, 'O');
                 }
+            }
+
+            // Process any remaining sentence buffer if nothing was queued yet
+            if (sentenceBuffer.trim() && (!isGameAction || sentenceCount === 0)) {
+                let cleanFinal = sentenceBuffer
+                    .replace(/<OPEN_GAME[^>]*\/?>/gi, '')
+                    .replace(/<MOVE[^>]*\/?>/gi, '')
+                    .replace(/\[[^\]]+\]/g, '')
+                    .replace(/<[^>]+>/g, '')
+                    .trim();
+                if (cleanFinal) synthesizeAndQueue(cleanFinal, token);
             }
         } catch (err) {
             console.error(err);
         } finally {
             setIsLoading(false);
             // Only auto-close if the game is OVER or if it's a one-shot game (Janken/Coin)
-            if (gameResult || gameType !== 'tictactoe') {
+            if (gameResult || (gameTypeRef.current !== 'tictactoe' && gameTypeRef.current !== 'chess')) {
                 setTimeout(() => {
                     setGameResult(null);
                     setShowGame(false);
                     setGameType(null);
+                    gameTypeRef.current = null;
                 }, 4000);
             }
         }
@@ -1582,32 +1828,77 @@ MANDATORY: START your response with <MOVE index="N" />.`;
         }
 
         hasSpokenRef.current = false;
-        const isDanceRequest = (
-            /(?:please\s+)?dance(?:\s+for\s+me)?|dance\s+for\s+me|can\s+you\s+dance|do\s+a\s+dance|wanna\s+dance|踊って|ダンスして|おどって|kyun\s*dance/i.test(userMsg) &&
-            !/(?:dance\s+(?:was|is)|great\s+dance|nice\s+dance|loved?\s+(?:the|your)\s+dance|good\s+dance|thanks?\s+for\s+the\s+dance|after\s+the\s+dance|that\s+dance|cool\s+dance|amazing\s+dance)/i.test(userMsg)
+
+        // ── 💃 / 🎤 USER PERFORMANCE DETECTION ──
+        // Only trigger special dance/singing performances if the USER explicitly requested it!
+        const isPraisingDanceOrAskingAboutIt = /(?:(?:great|nice|loved?|good|cool|amazing|awesome|cute|fun|beautiful)\s+(?:dance|dancing)|thanks?\s+(?:for|4)\s+(?:the\s+)?(?:dance|dancing)|after\s+the\s+dance|that\s+dance\s+(?:was|is)|do\s+you\s+(?:like|know\s+how)\s+to\s+dance|what(?:\s+is|\s+'s)?\s+(?:your\s+)?(?:favorite|favourite)?\s+dance|have\s+you\s+ever\s+danced)/i.test(userMsg);
+        const isExplicitDanceIntent = (
+            /\b(?:dance|dancing|dances|踊って|ダンスして|おどって)\b/i.test(userMsg) &&
+            (
+                /^(?:please\s+)?dance\b[!.]*$/i.test(userMsg.trim()) ||
+                /(?:can|could|will|would)\s+you(?:\s+please)?\s+dance/i.test(userMsg) ||
+                /(?:please\s+)?dance(?:\s+for\s+me|\s+with\s+me|\s+now|\s+something|\s+a\s+bit)?/i.test(userMsg) ||
+                /(?:wanna|want\s+to|let(?:'s|\s+us)?|show\s+me\s+(?:a|your)?|perform\s+(?:a)?|do\s+a)\s+dance/i.test(userMsg) ||
+                /(?:dance\s+(?:for\s+me|with\s+me|please|now))/i.test(userMsg) ||
+                /(?:dance\s+for\s+us|wanna\s+dance|let's\s+dance)/i.test(userMsg) ||
+                /(?:踊って|ダンスして|おどって)/i.test(userMsg)
+            )
         );
-        const isLagQueenRequest = /(?:lag\s*queen|lag\s*dance|do\s*the\s*lag)/i.test(userMsg);
+        const isDanceRequest = isExplicitDanceIntent && !isPraisingDanceOrAskingAboutIt;
+
+        const isPraisingSongOrAskingAboutIt = /(?:(?:great|nice|loved?|good|cool|amazing|awesome|cute|beautiful|sweet)\s+(?:song|singing)|thanks?\s+(?:for|4)\s+(?:the\s+)?(?:song|singing)|after\s+the\s+song|that\s+song\s+(?:was|is)|do\s+you\s+(?:like|know\s+how)\s+to\s+sing|what(?:\s+is|\s+'s)?\s+(?:your\s+)?(?:favorite|favourite)?\s+song|have\s+you\s+ever\s+sung)/i.test(userMsg);
+        const isExplicitSingIntent = (
+            /\b(?:sing|singing|song|songs|歌って|うたって)\b/i.test(userMsg) &&
+            (
+                /^(?:please\s+)?sing\b[!.]*$/i.test(userMsg.trim()) ||
+                /(?:can|could|will|would)\s+you(?:\s+please)?\s+sing/i.test(userMsg) ||
+                /(?:please\s+)?sing(?:\s+for\s+me|\s+a\s+song|\s+to\s+me|\s+something|\s+now)?/i.test(userMsg) ||
+                /(?:wanna|want\s+to|let(?:'s|\s+us)?|show\s+me\s+(?:how\s+you|a)?|perform\s+(?:a)?)\s+(?:hear\s+you\s+)?(?:sing|song)/i.test(userMsg) ||
+                /(?:sing\s+(?:for\s+me|a\s+song|something|please|to\s+me|now))/i.test(userMsg) ||
+                /(?:sing\s+for\s+us|sing\s+with\s+me)/i.test(userMsg) ||
+                /(?:歌って|うたって)/i.test(userMsg)
+            )
+        );
+        const isSingRequest = isExplicitSingIntent && !isPraisingSongOrAskingAboutIt;
+
+        const isLagQueenRequest = /(?:lag\s*queen|do\s*the\s*lag)/i.test(userMsg);
 
         if (isLagQueenRequest) {
+            userInitiatedPerformanceRef.current = "lag_queen";
             pendingDanceRef.current = "lag_queen";
-            console.log("💃 [Reina] Lag Queen dance request detected.");
+            console.log("💃 [Reina] Lag Queen dance request detected from user prompt.");
+        } else if (isSingRequest) {
+            userInitiatedPerformanceRef.current = "Singing";
+            pendingDanceRef.current = "Singing";
+            console.log("🎤 [Reina] Explicit Singing request detected from user prompt.");
         } else if (isDanceRequest) {
+            userInitiatedPerformanceRef.current = "kyun_dance";
             pendingDanceRef.current = "kyun_dance";
-            console.log("💃 [Reina] Explicit dance request detected in user prompt, queued pending dance.");
+            console.log("💃 [Reina] Explicit Kyun Kyun Dance request detected from user prompt.");
+        } else {
+            userInitiatedPerformanceRef.current = null;
+            pendingDanceRef.current = null;
         }
 
         try {
             const token = Cookies.get('token');
             const allMsgs = [...messages, { sender: 'user', text: userMsg }];
-            const context = allMsgs.slice(-12).map(m =>
+            const context = allMsgs.slice(-16).map(m =>
                 `${m.sender === 'user' ? 'Darling' : aiName}: ${m.text}`
             ).join('\n');
+            const history = allMsgs.slice(-20).map(m => ({
+                role: m.sender === 'user' ? 'user' : 'assistant',
+                content: m.text
+            }));
+            const sid = getSessionId();
 
             let apiEndpoint = 'http://localhost:5000/api/v1/ai/reina-com/chat';
             if (selectedModel === "2d") {
                 apiEndpoint = 'http://localhost:5000/api/v1/ai/2d/chat';
             } else if (selectedModel === "kira") {
                 apiEndpoint = 'http://localhost:5000/api/v1/ai/kira/chat';
+            } else if (selectedModel === "grok" || selectedModel === "grok-llm") {
+                apiEndpoint = 'http://localhost:5000/api/v1/ai/grok/chat';
             } else if (selectedModel === "reina-gemini") {
                 apiEndpoint = 'http://localhost:5000/api/v1/ai/reina-gemini/chat';
             } else if (selectedModel === "gemma4:e4b") {
@@ -1628,6 +1919,8 @@ MANDATORY: START your response with <MOVE index="N" />.`;
                     model: selectedModel, 
                     message: userMsg, 
                     context: context, 
+                    history: history,
+                    sessionId: sid,
                     bgmMode: bgmMode,
                     isYandere: bgmMode === 'yandere'
                 })
@@ -1665,39 +1958,108 @@ MANDATORY: START your response with <MOVE index="N" />.`;
                 // 1. Eager Emotion/Anim Parsing (updates dynamically as new tags stream in)
                 const emotionMatches = [...fullText.matchAll(/\[(?:emotion|exp)=([^\]]+)\]/g)];
                 if (emotionMatches.length > 0) {
-                    const latestEmotion = emotionMatches[emotionMatches.length - 1][1].trim().toLowerCase();
-                    if (currentEmotionRef.current !== latestEmotion) {
-                        currentEmotionRef.current = latestEmotion;
-                        console.log("🎭 [AI Parse] Emotion Detected:", latestEmotion);
-                        if (latestEmotion === "whisper") {
+                    const rawEmotion = emotionMatches[emotionMatches.length - 1][1].trim().toLowerCase();
+                    const sanitizedEmotion = sanitizeVrmEmotion(rawEmotion);
+                    if (currentEmotionRef.current !== sanitizedEmotion) {
+                        currentEmotionRef.current = sanitizedEmotion;
+                        console.log("🎭 [AI Parse] Emotion Detected:", rawEmotion, "-> Sanitized:", sanitizedEmotion);
+                        if (rawEmotion === "whisper") {
                             setEmotion("scary_smile2");
                             setAnimation("idle1");
                         } else {
-                            setEmotion(latestEmotion);
+                            setEmotion(sanitizedEmotion);
                         }
                     }
                 }
 
-                if (!hasParsedAnim) {
-                    const animMatch = fullText.match(/\[anim=([^\]]+)\]/);
-                    if (animMatch) {
-                        const requestedAnim = animMatch[1].trim();
-                        console.log("🏃 [AI Parse] Animation Detected:", requestedAnim);
-                        const isDance = requestedAnim === "kyun_dance" || requestedAnim === "dance1";
-                        if (isDance) {
-                            pendingDanceRef.current = requestedAnim;
-                            setAnimation("happy"); // Gesture happily while speaking intro line
-                        } else {
-                            const allowedAnims = ["idle1", "idle2", "VRMA_07", "nod", "shake", "angry", "happy", "sadIdle", "greeting"];
-                            if (allowedAnims.includes(requestedAnim)) {
-                                setAnimation(requestedAnim);
-                            } else {
-                                setAnimation("happy");
+                // 2. Animation Parsing with proper naming and emotional gestures
+                const animMatches = [...fullText.matchAll(/\[(?:anim|motion)=([^\]]+)\]/g)];
+                if (animMatches.length > 0) {
+                    const rawRequestedAnim = animMatches[animMatches.length - 1][1].trim();
+                    let requestedAnim = rawRequestedAnim;
+                    if (requestedAnim.toLowerCase() === "singing" || requestedAnim.toLowerCase() === "sing") requestedAnim = "Singing";
+                    if (requestedAnim.toLowerCase() === "kyun_dance" || requestedAnim.toLowerCase() === "dance" || requestedAnim.toLowerCase() === "dance1") requestedAnim = "kyun_dance";
+
+                    const isPerformance = requestedAnim === "kyun_dance" || requestedAnim === "dance1" || requestedAnim === "lag_queen" || requestedAnim === "Singing";
+
+                    if (isPerformance) {
+                        // Per user instruction: Performances (dance/sing) ONLY occur if the USER explicitly asked for them!
+                        // Do NOT start a performance simply because the AI casually mentions or tags dance/singing in chat.
+                        if (userInitiatedPerformanceRef.current) {
+                            let targetAnim = requestedAnim;
+                            // Enforce: For dance requests, NEVER do lag_queen; strictly use kyun_dance
+                            if (userInitiatedPerformanceRef.current === "kyun_dance") {
+                                targetAnim = "kyun_dance";
+                            } else if (userInitiatedPerformanceRef.current === "Singing") {
+                                targetAnim = "Singing";
                             }
+                            if (pendingDanceRef.current !== targetAnim) {
+                                pendingDanceRef.current = targetAnim;
+                            }
+                            setAnimation("idle1"); // Natural posture while spoken intro plays before performance
+                        } else {
+                            console.log("🚫 [Reina] Suppressed spontaneous AI performance tag because user did not request it:", requestedAnim);
+                            setAnimation("idle1");
+                            pendingDanceRef.current = null;
                         }
-                        lastInteractionRef.current = Date.now();
-                        hasParsedAnim = true;
+                    } else {
+                        const animMap = {
+                            // User defined names
+                            vrma1: "view_360",
+                            vrma_01: "view_360",
+                            vrma2: "scare_jump",
+                            vrma_02: "scare_jump",
+                            vrma3: "peace_sign",
+                            vrma_03: "peace_sign",
+                            vrma4: "bang",
+                            vrma_04: "bang",
+                            vrma5: "view_360_stylish",
+                            vrma_05: "view_360_stylish",
+                            "360": "view_360",
+                            "360_style": "view_360_stylish",
+                            peace: "peace_sign",
+                            v_sign: "peace_sign",
+                            pistol: "bang",
+                            gun: "bang",
+                            jump: "scare_jump",
+                            scare: "scare_jump",
+                            kiss: "blow_kiss",
+                            blow_a_kiss: "blow_kiss",
+                            nod: "nod_yes",
+                            yes: "nod_yes",
+                            thank: "thankful",
+                            thanks: "thankful",
+                            think: "thinking",
+                            curious: "look_around",
+                            look: "look_around",
+                            happy: "happy_idle",
+                            excited: "happy_idle",
+                            shrug: "VRMA_06",
+                            tsundere: "angry",
+                            yandere: "VRMA_07",
+                            sweet: "VRMA_07",
+                            wave: "greeting",
+                            hello: "greeting",
+                            talk: "idle1",
+                            talking: "idle1",
+                            speaking: "idle1"
+                        };
+                        const resolvedAnim = animMap[requestedAnim.toLowerCase()] || requestedAnim;
+                        const validAnims = [
+                            "view_360", "view_360_stylish", "scare_jump", "peace_sign", "bang",
+                            "blow_kiss", "happy_idle", "nod_yes", "look_around", "thankful", "thinking",
+                            "greeting", "angry", "sadIdle", "idle1", "idle2", "VRMA_06", "VRMA_07",
+                            "VRMA_01", "VRMA_02", "VRMA_03", "VRMA_04", "VRMA_05",
+                            "pose_friendy", "pose_lillian", "pose_nyammy", "pose_wonderful"
+                        ];
+                        const finalAnim = validAnims.includes(resolvedAnim) ? resolvedAnim : "idle1";
+                        if (!hasParsedAnim || animation !== finalAnim) {
+                            console.log("🏃 [AI Parse] Animation Selected:", finalAnim, `(requested: ${requestedAnim})`);
+                            setAnimation(finalAnim);
+                        }
                     }
+                    lastInteractionRef.current = Date.now();
+                    hasParsedAnim = true;
                 }
 
                 if (!hasParsedVoice) {
@@ -1776,9 +2138,20 @@ MANDATORY: START your response with <MOVE index="N" />.`;
                         .replace(/<OPEN_GAME[^>]*>/gi, '')
                         .replace(/<MOVE[^>]*>/gi, '')
                         .replace(/\[SYSTEM(?:\s+MESSAGE)?:\s*[^\]]*\]/gi, '')
-                        .replace(/\[(?:This|The|User|Response|Note|System|Assistant)[^\]]*\]/gi, '')
-                        .replace(/\[[^\]]+\]/g, '')
-                        .replace(/([\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2728}\u{1F496}])\1+/gu, '') // Strip emojis from TTS audio input
+                        .replace(/\[(?:This|The|User|Response|Note|System|Assistant)[^\]]*\]/gi, '');
+
+                    if (selectedTts === "fish") {
+                        cleanSentence = cleanSentence
+                            .replace(/\[(?:emotion|exp)=[^\]]+\]/gi, '')
+                            .replace(/\[(?:anim|motion)=[^\]]+\]/gi, '')
+                            .replace(/\[voice=[^\]]+\]/gi, '')
+                            .replace(/\[ACTION:[A-Z_]+\]/gi, '');
+                    } else {
+                        cleanSentence = cleanSentence.replace(/\[[^\]]+\]/g, '');
+                    }
+
+                    cleanSentence = cleanSentence
+                        .replace(/([\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2728}\u{1F496}])\1+/gu, '')
                         .trim();
                     if (cleanSentence) {
                         synthesizeAndQueue(cleanSentence, token);
@@ -1791,10 +2164,17 @@ MANDATORY: START your response with <MOVE index="N" />.`;
                 if (openGameMatch && !processedTagsRef.current.has(openGameMatch[0])) {
                     processedTagsRef.current.add(openGameMatch[0]);
                     const type = openGameMatch[1];
-                    setTimeout(() => {
-                        setGameType(type);
-                        setShowGame(true);
-                    }, 2000);
+                    setGameType(type);
+                    gameTypeRef.current = type;
+                    setShowGame(true);
+                    if (type === 'tictactoe') {
+                        const empty = Array(9).fill(null);
+                        tttBoardRef.current = empty;
+                        setTttBoard(empty);
+                        isPlayerTurnRef.current = true;
+                        setIsPlayerTurn(true);
+                        setGameResult(null);
+                    }
                 }
 
                 const moveMatch = fullText.match(/<MOVE[^>]*index=["']?(\d)["']?[^>]*>/i);
@@ -1803,17 +2183,16 @@ MANDATORY: START your response with <MOVE index="N" />.`;
                     let index = parseInt(moveMatch[1]);
 
                     // --- 🧠 Illegal Move Fixer ---
-                    if (tttBoard[index]) {
+                    const currentBoard = tttBoardRef.current;
+                    if (currentBoard[index] !== null) {
                         console.log(`[TIC-TAC-TOE] Reina tried illegal move at ${index}. Finding alternative...`);
-                        const available = tttBoard.map((v, i) => v === null ? i : null).filter(v => v !== null);
+                        const available = currentBoard.map((v, i) => v === null ? i : null).filter(v => v !== null);
                         if (available.length > 0) {
                             index = available[Math.floor(Math.random() * available.length)];
                         }
                     }
 
-                    if (gameType === 'tictactoe' && !isPlayerTurn) {
-                        handleTttMove(index, 'O');
-                    }
+                    handleTttMove(index, 'O');
                 }
             }
 
@@ -1914,13 +2293,14 @@ MANDATORY: START your response with <MOVE index="N" />.`;
             // No longer clearing latestAiMsg here, cleanup happens in playNextInQueue
             setIsLoading(false);
             
-            // 💃 Safety fallback: If dance is pending and no speech queue is playing/left, start dance
+            // 💃 Safety fallback: If performance is pending and no speech queue is playing/left, start performance
             setTimeout(() => {
                 if (pendingDanceRef.current && !isPlayingQueue.current && audioQueue.current.length === 0) {
                     const fallbackDance = pendingDanceRef.current;
                     pendingDanceRef.current = null;
+                    userInitiatedPerformanceRef.current = null;
                     hasSpokenRef.current = false;
-                    console.log("💃 [Reina] Triggering dance after stream completion:", fallbackDance);
+                    console.log("💃 [Reina] Triggering performance after stream completion:", fallbackDance);
                     setAnimation(fallbackDance);
                 }
             }, 800);
@@ -1993,42 +2373,15 @@ MANDATORY: START your response with <MOVE index="N" />.`;
                     <button 
                         className="dance-exit-btn" 
                         onClick={finishDanceSmooth}
-                        title="Stop Dance"
+                        title="Stop Performance"
+                        style={{
+                            background: 'rgba(15, 23, 42, 0.6)',
+                            border: '1px solid rgba(56, 189, 248, 0.4)',
+                            boxShadow: '0 0 15px rgba(56, 189, 248, 0.2)'
+                        }}
                     >
-                        <Heart size={22} fill="#ff4b8d" color="#ffffff" />
+                        <X size={24} color="#38bdf8" strokeWidth={2.5} />
                     </button>
-                    
-                    {/* Cinematic Seek Bar */}
-                    <div style={{ 
-                        position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', 
-                        zIndex: 1000, display: 'flex', alignItems: 'center', gap: '15px', 
-                        background: 'rgba(0,0,0,0.6)', padding: '10px 20px', borderRadius: '30px',
-                        backdropFilter: 'blur(5px)', border: '1px solid rgba(255,255,255,0.1)'
-                    }}>
-                        <span style={{ color: 'white', fontSize: '12px', fontWeight: 'bold' }}>SEEK</span>
-                        <input 
-                            type="range" 
-                            min="0" 
-                            max="100" 
-                            defaultValue="0" 
-                            id="dance-seek-bar"
-                            style={{ width: '400px', cursor: 'pointer', accentColor: '#ff4b8d' }}
-                            onChange={(e) => {
-                                if (danceAudioRef.current && danceAudioRef.current.duration) {
-                                    const targetTime = (e.target.value / 100) * danceAudioRef.current.duration;
-                                    danceAudioRef.current.currentTime = targetTime;
-                                    if (lyricsRef.current) lyricsRef.current.innerHTML = "";
-                                    // Resume audio after seeking
-                                    if (danceAudioRef.current.paused) {
-                                        danceAudioRef.current.play().catch(err => console.warn('Seek play error:', err));
-                                    }
-                                    if (danceAudioRef.current.ctx && danceAudioRef.current.ctx.state === 'suspended') {
-                                        danceAudioRef.current.ctx.resume();
-                                    }
-                                }
-                            }}
-                        />
-                    </div>
                 </>
             )}
 
@@ -2191,6 +2544,7 @@ MANDATORY: START your response with <MOVE index="N" />.`;
                   ) : (
                       <VrmAvatar
                           emotion={emotion}
+                          isTalking={isTalking}
                           animation={dancePhase !== "idle" ? renderedDanceAnim : animation}
                           isDancing={dancePhase !== "idle" || animation === "kyun_dance" || animation === "dance1" || animation === "Singing" || animation === "lag_queen"}
                           peak={peak}
@@ -2286,13 +2640,13 @@ MANDATORY: START your response with <MOVE index="N" />.`;
                             <span>Brain Model</span>
                         </div>
                         <div className="picker-grid models">
-                            {["2d", "kira", "reina", "reina-gemini", "reina-com", "reinaT", "reinaTD", "reinaJ", "reinaE", "gemma4:e4b", "dolphin3:8b"].map(m => (
+                            {["2d", "kira", "grok", "reina", "reina-gemini", "reina-com", "reinaT", "reinaTD", "reinaJ", "reinaE", "gemma4:e4b", "dolphin3:8b"].map(m => (
                                 <button
                                     key={m}
                                     className={`anim-btn ${selectedModel === m ? 'active' : ''}`}
                                     onClick={() => setSelectedModel(m)}
                                 >
-                                    {m === "2d" ? "🌸 2D (Gemma 4)" : (m === "kira" ? "★ KIRA" : (m === "reina-gemini" ? "REINA (Gemini)" : (m === "reina-com" ? "Companion" : m)))}
+                                    {m === "2d" ? "🌸 2D (Gemma 4)" : (m === "kira" ? "★ KIRA" : (m === "grok" ? "⚡ Grok LLM" : (m === "reina-gemini" ? "REINA (Gemini)" : (m === "reina-com" ? "Companion" : m))))}
                                 </button>
                             ))}
                         </div>
@@ -2303,15 +2657,31 @@ MANDATORY: START your response with <MOVE index="N" />.`;
                             <span>TTS Engine</span>
                         </div>
                         <div className="picker-grid models">
-                            {["voicevox", "queen3"].map(t => (
+                            {["voicevox", "queen3", "fish"].map(t => (
                                 <button
                                     key={t}
                                     className={`anim-btn ${selectedTts === t ? 'active' : ''}`}
                                     onClick={() => setSelectedTts(t)}
                                 >
-                                    {t === "voicevox" ? "Voicevox (JP)" : "Queen3 (EN)"}
+                                    {t === "voicevox" ? "Voicevox (JP)" : (t === "fish" ? "🐟 Fish Audio (Osana)" : "Queen3 (EN)")}
                                 </button>
                             ))}
+                        </div>
+                    </div>
+
+                    <div className="picker-section">
+                        <div className="picker-header">
+                            <span>Conversation Memory</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                                className="anim-btn"
+                                style={{ width: '100%', borderColor: 'rgba(244, 63, 94, 0.4)', color: '#f43f5e' }}
+                                onClick={handleClearMemory}
+                                title="Wipes local & server chat history for a fresh start"
+                            >
+                                🧹 Clear Memory & New Chat
+                            </button>
                         </div>
                     </div>
 
@@ -2357,7 +2727,7 @@ MANDATORY: START your response with <MOVE index="N" />.`;
                             }}>Reset</button>
                         </div>
                         <div className="picker-grid models">
-                            {["neutral", "happy", "sweet", "sad", "jealous", "angry", "psycho", "scary_smile", "scary_smile2", "hollow", "dead", "flirty", "excited", "voidoll"].map(em => (
+                            {["neutral", "happy", "sweet", "sad", "jealous", "angry", "scary_smile", "scary_smile2", "hollow", "dead", "flirty"].map(em => (
                                 <button
                                     key={em}
                                     className={`anim-btn ${emotion === em ? 'active' : ''}`}
@@ -2382,23 +2752,28 @@ MANDATORY: START your response with <MOVE index="N" />.`;
                         </div>
                         <div className="picker-grid">
                             {[
-                                { id: "Singing", label: "🎤 Singing (The Last Strawberry)" },
-                                { id: "lag_queen", label: "💃 Lag Queen Dance" },
+                                { id: "bang", label: "👉 Bang (Hand Pistol)" },
+                                { id: "peace_sign", label: "✌️ Peace Sign" },
+                                { id: "blow_kiss", label: "💋 Blow A Kiss" },
+                                { id: "scare_jump", label: "👻 Scare Jump" },
+                                { id: "view_360", label: "🔄 360 View" },
+                                { id: "view_360_stylish", label: "✨ 360 View (Stylish)" },
+                                { id: "happy_idle", label: "😊 Happy Idle" },
+                                { id: "nod_yes", label: "👍 Head Nod (Yes)" },
+                                { id: "thinking", label: "🤔 Thinking" },
+                                { id: "thankful", label: "🙏 Thankful" },
+                                { id: "look_around", label: "👀 Look Around" },
+                                { id: "greeting", label: "👋 Greeting" },
+                                { id: "VRMA_06", label: "🤷 Shrug / Sassy" },
+                                { id: "VRMA_07", label: "🥀 Yandere Cling" },
+                                { id: "angry", label: "💢 Angry / Pout" },
+                                { id: "sadIdle", label: "🥺 Shy / Sad Idle" },
+                                { id: "idle1", label: "Idle 1 (Natural)" },
+                                { id: "idle2", label: "Idle 2 (Casual)" },
                                 { id: "kyun_dance", label: "💃 Kyun Kyun Dance" },
                                 { id: "dance1", label: "💃 Dance 1" },
-                                { id: "greeting", label: "👋 Greeting" },
-                                { id: "VRMA_01", label: "VRMA 01" },
-                                { id: "VRMA_02", label: "VRMA 02" },
-                                { id: "VRMA_03", label: "VRMA 03" },
-                                { id: "VRMA_04", label: "VRMA 04" },
-                                { id: "VRMA_05", label: "VRMA 05" },
-                                { id: "VRMA_06", label: "VRMA 06" },
-                                { id: "VRMA_07", label: "VRMA 07 (Yandere)" },
-                                { id: "idle1", label: "Idle 1" },
-                                { id: "idle2", label: "Idle 2" },
-                                { id: "Talking", label: "Talking" },
-                                { id: "sadIdle", label: "Sad Idle" },
-                                { id: "angry", label: "Angry" },
+                                { id: "lag_queen", label: "💃 Lag Queen Dance" },
+                                { id: "Singing", label: "🎤 Singing (The Last Strawberry)" },
                                 { id: "pose_friendy", label: "Pose Friendly" },
                                 { id: "pose_lillian", label: "Pose Lillian" },
                                 { id: "pose_nyammy", label: "Pose Nyammy" },
@@ -2494,7 +2869,7 @@ MANDATORY: START your response with <MOVE index="N" />.`;
                     </button>
 
                     {showGame && (
-                        <div className="reina-janken-panel">
+                        <div className={`reina-janken-panel ${gameType === 'chess' ? 'chess-active' : ''}`}>
                             {isCountingDown ? (
                                 <div className="game-countdown-overlay">
                                     <span>{countdownText}</span>
@@ -2502,15 +2877,38 @@ MANDATORY: START your response with <MOVE index="N" />.`;
                             ) : !gameType ? (
                                 <div className="game-menu">
                                     <span className="menu-title">Choose a Game! ✨</span>
+                                    <button onClick={() => {
+                                        setGameType('chess');
+                                        gameTypeRef.current = 'chess';
+                                        setGameResult(null);
+                                    }}>♟️ Chess</button>
+                                    <button onClick={() => {
+                                        setGameType('tictactoe');
+                                        gameTypeRef.current = 'tictactoe';
+                                        const empty = Array(9).fill(null);
+                                        tttBoardRef.current = empty;
+                                        setTttBoard(empty);
+                                        isPlayerTurnRef.current = true;
+                                        setIsPlayerTurn(true);
+                                        setGameResult(null);
+                                    }}>❌ Tic-Tac-Toe</button>
                                     <button onClick={() => setGameType('janken')}>✊ Janken</button>
                                     <button onClick={() => setGameType('coin')}>🪙 Coin Flip</button>
                                     <button onClick={() => setGameType('number')}>🔢 Guess Number</button>
-                                    <button onClick={() => setGameType('tictactoe')}>❌ Tic-Tac-Toe</button>
                                 </div>
                             ) : (
                                 <div className="active-game-container">
-                                    <button className="game-back-btn" onClick={() => setGameType(null)}>← Back</button>
-                                    {gameResult ? (
+                                    <button className="game-back-btn" onClick={() => {
+                                        setGameType(null);
+                                        gameTypeRef.current = null;
+                                        const empty = Array(9).fill(null);
+                                        tttBoardRef.current = empty;
+                                        setTttBoard(empty);
+                                        isPlayerTurnRef.current = true;
+                                        setIsPlayerTurn(true);
+                                        setGameResult(null);
+                                    }}>← Back</button>
+                                    {gameResult && gameType !== 'tictactoe' && gameType !== 'chess' ? (
                                         <div className="janken-result-overlay">
                                             <div className="move-compare">
                                                 <span>You: {playerMove}</span>
@@ -2523,6 +2921,17 @@ MANDATORY: START your response with <MOVE index="N" />.`;
                                         </div>
                                     ) : (
                                         <>
+                                            {gameType === 'chess' && (
+                                                <ChessGame 
+                                                    onGameAction={sendGameAction}
+                                                    isLoading={isLoading}
+                                                    isTalking={isTalking}
+                                                    closeness={closeness}
+                                                    consecutiveLosses={consecutiveLosses}
+                                                    setConsecutiveLosses={setConsecutiveLosses}
+                                                    setIsPouting={setIsPouting}
+                                                />
+                                            )}
                                             {gameType === 'janken' && (
                                                 <div className="janken-choices">
                                                     <button onClick={() => handleJanken("Rock")}>✊ Rock</button>
@@ -2544,17 +2953,29 @@ MANDATORY: START your response with <MOVE index="N" />.`;
                                                 </div>
                                             )}
                                             {gameType === 'tictactoe' && (
-                                                <div className="ttt-grid">
-                                                    {tttBoard.map((cell, idx) => (
-                                                        <button 
-                                                            key={idx} 
-                                                            className={`ttt-cell ${cell ? 'filled' : ''}`}
-                                                            onClick={() => handleTttMove(idx, 'X')}
-                                                            disabled={!isPlayerTurn || cell || isLoading}
-                                                        >
-                                                            {cell}
-                                                        </button>
-                                                    ))}
+                                                <div className="ttt-container">
+                                                    {gameResult && (
+                                                        <div className={`ttt-result-banner ${gameResult.toLowerCase()}`}>
+                                                            {gameResult === "WON" ? "REINA WINS! 👑" : (gameResult === "LOST" ? "YOU WIN! ✨" : "DRAW! 🤝")}
+                                                        </div>
+                                                    )}
+                                                    <div className="ttt-grid">
+                                                        {tttBoard.map((cell, idx) => (
+                                                            <button 
+                                                                key={idx} 
+                                                                className={`ttt-cell ${cell ? 'filled' : ''} ${cell === 'X' ? 'cell-x' : ''} ${cell === 'O' ? 'cell-o' : ''}`}
+                                                                onClick={() => handleTttMove(idx, 'X')}
+                                                                disabled={!isPlayerTurn || cell !== null || isLoading || !!gameResult}
+                                                            >
+                                                                {cell}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                    {!gameResult && (
+                                                        <div className="ttt-turn-indicator">
+                                                            {isLoading || !isPlayerTurn ? "Reina is thinking..." : "Your turn (X)"}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
                                         </>

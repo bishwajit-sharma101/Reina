@@ -9,59 +9,51 @@ import * as THREE from 'three';
 // ==========================================================================
 // Expression Presets — each emotion maps to VRM morph target intensities
 // ==========================================================================
-// ==========================================================================
-// Expression Presets — each emotion maps to VRM morph target intensities
-// ==========================================================================
+// 11 Authoritative 3D VRM Expression Presets (matching the Settings Drawer)
 const EXPRESSION_PRESETS = {
     neutral: {
         happy: 0, angry: 0, sad: 0, relaxed: 0.15, surprised: 0,
         blinkLeft: 0, blinkRight: 0, ee: 0, oh: 0, eyeHighlightHide: 0,
         blush: 0, eyebrowAnger: 0, eyebrowSurprise: 0
     },
+    happy: {
+        happy: 1.0, angry: 0, sad: 0, relaxed: 0.3, surprised: 0.1,
+        blinkLeft: 0, blinkRight: 0, ee: 0.15, oh: 0, eyeHighlightHide: 0,
+        blush: 0.4, eyebrowAnger: 0, eyebrowSurprise: 0.1
+    },
     sweet: {
         happy: 0.7, angry: 0, sad: 0, relaxed: 0.4, surprised: 0,
-        blinkLeft: 0, blinkRight: 0, ee: 0.15, oh: 0, eyeHighlightHide: 0,
+        blinkLeft: 0, blinkRight: 0, ee: 0.1, oh: 0, eyeHighlightHide: 0,
         blush: 0.5, eyebrowAnger: 0, eyebrowSurprise: 0.1
+    },
+    sad: {
+        happy: 0, angry: 0, sad: 1.0, relaxed: 0, surprised: 0,
+        blinkLeft: 0, blinkRight: 0, ee: 0, oh: 0.1, eyeHighlightHide: 0,
+        blush: 0, eyebrowAnger: 0, eyebrowSurprise: 0
     },
     jealous: {
         happy: 0, angry: 0.7, sad: 0.3, relaxed: 0, surprised: 0,
-        blinkLeft: 0.3, blinkRight: 0, ee: 0, oh: 0.1, eyeHighlightHide: 0,
-        blush: 0.2, eyebrowAnger: 0.6, eyebrowSurprise: 0
+        blinkLeft: 0, blinkRight: 0, ee: 0, oh: 0, eyeHighlightHide: 0,
+        blush: 0.25, eyebrowAnger: 0.6, eyebrowSurprise: 0
     },
     angry: {
         happy: 0, angry: 1.0, sad: 0, relaxed: 0, surprised: 0.15,
         blinkLeft: 0, blinkRight: 0, ee: 0, oh: 0, eyeHighlightHide: 0,
         blush: 0.3, eyebrowAnger: 1.0, eyebrowSurprise: 0
     },
-    brat: {
-        happy: 0.5, angry: 0, sad: 0, relaxed: 0.2, surprised: 0.15,
-        blinkLeft: 1.0, blinkRight: 0, ee: 0.3, oh: 0, eyeHighlightHide: 0,
-        blush: 0.3, eyebrowAnger: 0.2, eyebrowSurprise: 0.2
+    scary_smile: {
+        happy: 0, angry: 0, sad: 0, relaxed: 0, surprised: 0.5,
+        blinkLeft: 0, blinkRight: 0, ee: 0, oh: 0,
+        fun: 1.0,
+        eyeHighlightHide: 1.0,
+        ih: 0.25,
+        haShortLow: 0.0,
+        blush: 0, eyebrowAnger: 0.3, eyebrowSurprise: 0.4
     },
-    bratty: {
-        happy: 0.5, angry: 0.1, sad: 0, relaxed: 0.15, surprised: 0.1,
-        blinkLeft: 1.0, blinkRight: 0, ee: 0.3, oh: 0, eyeHighlightHide: 0,
-        blush: 0.25, eyebrowAnger: 0.3, eyebrowSurprise: 0.15
-    },
-    adorable: {
-        happy: 0.4, angry: 0, sad: 0.1, relaxed: 0.3, surprised: 0.2,
-        blinkLeft: 0, blinkRight: 0.9, ee: 0.2, oh: 0, eyeHighlightHide: 0,
-        blush: 0.6, eyebrowAnger: 0, eyebrowSurprise: 0.2
-    },
-    sad: {
-        happy: 0, angry: 0, sad: 1.0, relaxed: 0, surprised: 0,
-        blinkLeft: 0.2, blinkRight: 0.2, ee: 0, oh: 0.2, eyeHighlightHide: 0,
-        blush: 0, eyebrowAnger: 0, eyebrowSurprise: 0
-    },
-    happy: {
-        happy: 1.0, angry: 0, sad: 0, relaxed: 0.3, surprised: 0.1,
-        blinkLeft: 0, blinkRight: 0, ee: 0.2, oh: 0, eyeHighlightHide: 0,
-        blush: 0.4, eyebrowAnger: 0, eyebrowSurprise: 0.1
-    },
-    mad: {
-        happy: 0, angry: 1.0, sad: 0, relaxed: 0, surprised: 0.8,
-        blinkLeft: 0, blinkRight: 0, ee: 0, oh: 0.1, fun: 0.5, eyeHighlightHide: 0,
-        blush: 0, eyebrowAnger: 1.0, eyebrowSurprise: 0.5
+    scary_smile2: {
+        happy: 0.4, angry: 0, sad: 0, relaxed: 0.3, surprised: 0.1,
+        blinkLeft: 0, blinkRight: 0, ee: 0, oh: 0, eyeHighlightHide: 0,
+        blush: 0.1, eyebrowAnger: 0.3, eyebrowSurprise: 0.2
     },
     hollow: {
         happy: 0, angry: 0.7, sad: 0, relaxed: 0, surprised: 0.4,
@@ -73,66 +65,28 @@ const EXPRESSION_PRESETS = {
         blinkLeft: 0, blinkRight: 0, ee: 0, oh: 0, fun: 1.0, eyeHighlightHide: 1.0,
         blush: 0, eyebrowAnger: 0.8, eyebrowSurprise: 0
     },
-    scary_smile: {
-        happy: 0, angry: 0, sad: 0, relaxed: 0, surprised: 0.5,
-        blinkLeft: 0, blinkRight: 0, ee: 0, oh: 0, 
-        fun: 1.0, 
-        eyeHighlightHide: 1.0,
-        ih: 1.0,
-        haShortLow: 1.0,
-        blush: 0, eyebrowAnger: 0.3, eyebrowSurprise: 0.4
-    },
-    excited: {
-        happy: 0.9, angry: 0, sad: 0, relaxed: 0.2, surprised: 0.35,
-        blinkLeft: 0, blinkRight: 0, ee: 0, oh: 0.1, ih: 0.5, eyeHighlightHide: 0,
-        blush: 0.5, eyebrowAnger: 0, eyebrowSurprise: 0.4
-    },
     flirty: {
-        happy: 0.4, angry: 0, sad: 0, relaxed: 0.3, surprised: 0.1,
-        blinkLeft: 0, blinkRight: 0.8, ee: 0.2, oh: 0, eyeHighlightHide: 0,
-        blush: 0.7, eyebrowAnger: 0, eyebrowSurprise: 0.1
-    },
-    tsundere: {
-        happy: 0, angry: 0.8, sad: 0, relaxed: 0, surprised: 0.2,
-        blinkLeft: 0, blinkRight: 0.8, ee: 0.3, oh: 0, eyeHighlightHide: 0,
-        blush: 0.6, eyebrowAnger: 0.7, eyebrowSurprise: 0.2
-    },
-    embarrassed: {
-        happy: 0.3, angry: 0, sad: 0.2, relaxed: 0, surprised: 0.4,
-        blinkLeft: 0, blinkRight: 0, ee: 0, oh: 0.3, eyeHighlightHide: 0,
-        blush: 0.9, eyebrowAnger: 0.2, eyebrowSurprise: 0.3
-    },
-    joke: {
-        happy: 0.8, angry: 0, sad: 0, relaxed: 0.3, surprised: 0.3,
-        blinkLeft: 1.0, blinkRight: 0, ee: 0.4, oh: 0, eyeHighlightHide: 0,
-        blush: 0.3, eyebrowAnger: 0, eyebrowSurprise: 0.3
-    },
-    scary_smile2: {
-        happy: 0.4, angry: 0, sad: 0, relaxed: 0.3, surprised: 0.1,
-        blinkLeft: 0, blinkRight: 0.8, ee: 0.2, oh: 0, eyeHighlightHide: 0,
-        blush: 0.1, eyebrowAnger: 0.3, eyebrowSurprise: 0.2
-    },
-    psycho: {
-        happy: 1.0, angry: 0.4, sad: 0, relaxed: 0, surprised: 0.3,
-        blinkLeft: 0, blinkRight: 0, ee: 1.0, oh: 0, fun: 0.5, eyeHighlightHide: 0,
-        blush: 0.2, eyebrowAnger: 0.5, eyebrowSurprise: 0.3
-    },
-    joy: {
-        happy: 1.0, angry: 0, sad: 0, relaxed: 0.3, surprised: 0.1,
-        blinkLeft: 0, blinkRight: 0, ee: 0.2, oh: 0, eyeHighlightHide: 0,
-        blush: 0.45, eyebrowAnger: 0, eyebrowSurprise: 0.1
-    },
-    fun: {
-        happy: 0.6, angry: 0, sad: 0, relaxed: 0.5, surprised: 0.2,
-        blinkLeft: 0, blinkRight: 0, ee: 0.15, oh: 0.1, eyeHighlightHide: 0,
-        blush: 0.35, eyebrowAnger: 0, eyebrowSurprise: 0.2
-    },
-    sorrow: {
-        happy: 0, angry: 0, sad: 1.0, relaxed: 0, surprised: 0,
-        blinkLeft: 0.2, blinkRight: 0.2, ee: 0, oh: 0.2, eyeHighlightHide: 0,
-        blush: 0.1, eyebrowAnger: 0.2, eyebrowSurprise: 0
-    },
+        happy: 0.5, angry: 0, sad: 0, relaxed: 0.3, surprised: 0.1,
+        blinkLeft: 0, blinkRight: 0, ee: 0.1, oh: 0, eyeHighlightHide: 0,
+        blush: 0.6, eyebrowAnger: 0, eyebrowSurprise: 0.1
+    }
 };
+
+// Aliases ensuring any legacy or AI synonyms safely resolve to valid presets without mesh distortion
+EXPRESSION_PRESETS.joke = EXPRESSION_PRESETS.flirty;
+EXPRESSION_PRESETS.tsundere = EXPRESSION_PRESETS.angry;
+EXPRESSION_PRESETS.embarrassed = EXPRESSION_PRESETS.jealous;
+EXPRESSION_PRESETS.excited = EXPRESSION_PRESETS.happy;
+EXPRESSION_PRESETS.joy = EXPRESSION_PRESETS.happy;
+EXPRESSION_PRESETS.fun = EXPRESSION_PRESETS.happy;
+EXPRESSION_PRESETS.psycho = EXPRESSION_PRESETS.scary_smile;
+EXPRESSION_PRESETS.mad = EXPRESSION_PRESETS.angry;
+EXPRESSION_PRESETS.sorrow = EXPRESSION_PRESETS.sad;
+EXPRESSION_PRESETS.brat = EXPRESSION_PRESETS.angry;
+EXPRESSION_PRESETS.bratty = EXPRESSION_PRESETS.angry;
+EXPRESSION_PRESETS.adorable = EXPRESSION_PRESETS.sweet;
+EXPRESSION_PRESETS.whisper = EXPRESSION_PRESETS.scary_smile2;
+
 
 
 function lerp(a, b, t) { return a + (b - a) * t; }
@@ -181,8 +135,9 @@ function VrmModel({ vrmUrl, animationUrl, emotion, customExpression = null, isTa
         });
     }, [vrm]);
 
-    // Lip sync state
+    // Lip sync state & smoothed vowel weights
     const lipRef = useRef({ phase: 0, nextSwitch: 0, currentShape: 'aa', intensity: 0 });
+    const mouthWeightsRef = useRef({ aa: 0, ih: 0, ou: 0, ee: 0, oh: 0 });
 
     // Natural blink timing
     const blinkRef = useRef({ nextBlinkTime: 2 + Math.random() * 3, isBlinking: false, blinkStart: 0 });
@@ -231,6 +186,28 @@ function VrmModel({ vrmUrl, animationUrl, emotion, customExpression = null, isTa
         };
     }, [vrmUrl]);
 
+    // Animation clip cache to enable instant, smooth crossfades between animations
+    const clipCacheRef = useRef(new Map());
+
+    useEffect(() => {
+        // Clear cached animation clips when VRM model instance changes
+        clipCacheRef.current.clear();
+        if (!vrm) return;
+
+        // Prefetch core animations into cache for instantaneous crossfading
+        const loader = new GLTFLoader();
+        loader.register((parser) => new VRMAnimationLoaderPlugin(parser));
+        ["/animations/idle1.vrma", "/animations/bang.vrma"].forEach(url => {
+            loader.load(url, (gltf) => {
+                const vrmAnims = gltf.userData.vrmAnimations;
+                if (vrmAnims && vrmAnims.length > 0 && vrm) {
+                    const clip = createVRMAnimationClip(vrmAnims[0], vrm);
+                    if (clip) clipCacheRef.current.set(url, clip);
+                }
+            }, undefined, () => {});
+        });
+    }, [vrm]);
+
     // Play VRMA Animation
     useEffect(() => {
         if (!vrm || !animationUrl || !mixerRef.current) {
@@ -244,6 +221,32 @@ function VrmModel({ vrmUrl, animationUrl, emotion, customExpression = null, isTa
         prevAnimUrlRef.current = animationUrl;
         let isCancelled = false;
 
+        const playAction = (clip, url) => {
+            if (isCancelled || !vrm || !mixerRef.current) return;
+            const newAction = mixerRef.current.clipAction(clip);
+            newAction.setLoop(THREE.LoopRepeat);
+            newAction.clampWhenFinished = false;
+            newAction.timeScale = 1.0;
+
+            if (currentActionRef.current && currentActionRef.current !== newAction) {
+                currentActionRef.current.fadeOut(0.35);
+            }
+            if (currentActionRef.current !== newAction || !newAction.isRunning()) {
+                newAction.reset().fadeIn(0.35).play();
+                currentActionRef.current = newAction;
+            }
+
+            if (onAnimationPlay) {
+                onAnimationPlay(url);
+            }
+        };
+
+        // If clip is already loaded in memory, play it instantly
+        if (clipCacheRef.current.has(animationUrl)) {
+            playAction(clipCacheRef.current.get(animationUrl), animationUrl);
+            return;
+        }
+
         const loader = new GLTFLoader();
         loader.register((parser) => new VRMAnimationLoaderPlugin(parser));
 
@@ -256,22 +259,17 @@ function VrmModel({ vrmUrl, animationUrl, emotion, customExpression = null, isTa
             const clip = createVRMAnimationClip(vrmAnimations[0], vrm);
             if (!clip) return;
 
-            const newAction = mixerRef.current.clipAction(clip);
-            newAction.setLoop(THREE.LoopRepeat);
-            newAction.clampWhenFinished = false;
-            newAction.timeScale = 1.0;
-
-            if (currentActionRef.current) {
-                currentActionRef.current.fadeOut(0.6);
-            }
-            newAction.reset().fadeIn(0.6).play();
-            currentActionRef.current = newAction;
-            
-            if (onAnimationPlay) {
-                onAnimationPlay(animationUrl);
-            }
+            clipCacheRef.current.set(animationUrl, clip);
+            playAction(clip, animationUrl);
         }, undefined, (err) => {
-            console.warn("Animation load fallback:", animationUrl, err);
+            console.warn("[VRM] Animation load fallback:", animationUrl, err);
+            // Safe fallback to idle1 if an animation fails to load
+            if (animationUrl !== "/animations/idle1.vrma") {
+                const idleUrl = "/animations/idle1.vrma";
+                if (clipCacheRef.current.has(idleUrl)) {
+                    playAction(clipCacheRef.current.get(idleUrl), idleUrl);
+                }
+            }
         });
 
         return () => {
@@ -293,11 +291,11 @@ function VrmModel({ vrmUrl, animationUrl, emotion, customExpression = null, isTa
         if (!isDancing) {
             let targetCamPos = [0, 0.15, 1.85];
 
-            if (['sweet', 'flirty', 'adorable'].includes(emotion)) {
+            if (['sweet', 'flirty'].includes(emotion)) {
                 targetCamPos = [0.10, 0.14, 1.85];
-            } else if (['tsundere', 'angry', 'jealous', 'brat', 'bratty'].includes(emotion)) {
+            } else if (['angry', 'jealous'].includes(emotion)) {
                 targetCamPos = [-0.12, 0.16, 1.85];
-            } else if (['psycho', 'scary_smile', 'scary_smile2', 'dead', 'hollow'].includes(emotion)) {
+            } else if (['scary_smile', 'scary_smile2', 'dead', 'hollow'].includes(emotion)) {
                 targetCamPos = [0, 0.08, 1.85];
             }
 
@@ -371,7 +369,7 @@ function VrmModel({ vrmUrl, animationUrl, emotion, customExpression = null, isTa
             try { mgr.setValue('eyebrowSurprise', cur.eyebrowSurprise); } catch (e) {}
             try { mgr.setValue('haShortLow', cur.haShortLow); } catch (e) {}
 
-            const isPsycho = ['psycho', 'scary_smile', 'scary_smile2', 'dead', 'hollow'].includes(emotion);
+            const isPsycho = ['scary_smile', 'scary_smile2', 'dead', 'hollow'].includes(emotion);
             if (eyeMaterialsRef.current.length > 0) {
                 eyeMaterialsRef.current.forEach(({ material, originalColor }) => {
                     if (isPsycho) {
@@ -409,34 +407,93 @@ function VrmModel({ vrmUrl, animationUrl, emotion, customExpression = null, isTa
                 }
             }
 
-            // 4. LIP SYNC
+            // 4. NATURAL ANIME LIP SYNC (Delicate, capped opening, never gaping wide open)
             const isSinging = animationUrl && animationUrl.includes('Singing');
             const shouldLipSync = isTalking || isSinging;
 
-            try { mgr.setValue('aa', 0); } catch (e) {}
-            try { mgr.setValue('ih', shouldLipSync ? 0 : cur.ih); } catch (e) {}
-            try { mgr.setValue('ou', 0); } catch (e) {}
-            try { mgr.setValue('ee', shouldLipSync ? 0 : cur.ee); } catch (e) {}
-            try { mgr.setValue('oh', shouldLipSync ? 0 : cur.oh); } catch (e) {}
+            // Strict maximum opening caps to ensure mouth never gaps open or sticks tongue out
+            const MOUTH_CAPS = {
+                aa: 0.30, // Natural soft jaw opening — never exposes throat or forces tongue out
+                ih: 0.16, // Subtle horizontal smile opening
+                ou: 0.20, // Gentle small rounded mouth
+                ee: 0.18, // Subtle teeth/vowel articulation
+                oh: 0.24  // Small rounded O shape
+            };
+
+            const mouthWeights = mouthWeightsRef.current;
+            const lip = lipRef.current;
+
+            // Suppress wide open laughing or shout morphs during speech
+            if (shouldLipSync) {
+                try { mgr.setValue('haShortLow', 0); } catch (e) {}
+            }
 
             if (shouldLipSync) {
-                const lip = lipRef.current;
                 lip.phase += delta;
                 if (lip.phase > lip.nextSwitch) {
-                    const shapes = ['aa', 'ih', 'ou', 'ee', 'oh', 'aa', 'aa', 'ih'];
-                    lip.currentShape = shapes[Math.floor(Math.random() * shapes.length)];
-                    lip.nextSwitch = lip.phase + (isSinging ? 0.15 : 0.08) + Math.random() * 0.12;
-                    lip.intensity = 0.4 + Math.random() * 0.6;
+                    const speechShapes = ['aa', 'ih', 'ee', 'oh', 'ou', 'aa', 'ee'];
+                    lip.currentShape = speechShapes[Math.floor(Math.random() * speechShapes.length)];
+                    lip.nextSwitch = lip.phase + 0.08 + Math.random() * 0.10;
                 }
+
                 const effectivePeak = isSinging ? (Math.sin(lip.phase * 4) * 0.5 + 0.5) : peak;
-                const envelope = (0.2 + effectivePeak * 0.8) * (Math.sin(lip.phase * 8) * 0.5 + 0.5);
-                const finalVal = lip.intensity * envelope;
-                try { mgr.setValue(lip.currentShape, Math.min(finalVal, 1.0)); } catch (e) {}
+                const isSpeakingCadence = effectivePeak > 0.025;
+
+                // Syllabic rise and fall (~4.5 Hz natural speech rhythm)
+                const syllableWave = Math.max(0, Math.sin(lip.phase * 15.0));
+
+                let targetOpenness = 0;
+                if (isSpeakingCadence) {
+                    const audioIntensity = Math.min((effectivePeak - 0.025) * 2.8, 1.0);
+                    targetOpenness = (0.35 + 0.65 * audioIntensity) * (0.3 + 0.7 * syllableWave);
+                } else if (isTalking) {
+                    // Slight breathing micro-movement during speech pause
+                    targetOpenness = Math.sin(lip.phase * 8.0) * 0.04;
+                }
+
+                // Smoothly lerp active and inactive vowel shapes
+                ['aa', 'ih', 'ou', 'ee', 'oh'].forEach(v => {
+                    const targetVal = (v === lip.currentShape) 
+                        ? Math.max(0, targetOpenness * (MOUTH_CAPS[v] || 0.22))
+                        : 0;
+                    mouthWeights[v] = lerp(mouthWeights[v] || 0, targetVal, 0.35);
+                    try { mgr.setValue(v, mouthWeights[v]); } catch (e) {}
+                });
+            } else {
+                // Smoothly close mouth completely when silent
+                ['aa', 'ih', 'ou', 'ee', 'oh'].forEach(v => {
+                    mouthWeights[v] = lerp(mouthWeights[v] || 0, 0, 0.3);
+                    try { mgr.setValue(v, mouthWeights[v]); } catch (e) {}
+                });
+            }
+        }
+
+        // =============================================================
+        // 5. CONVERSATIONAL MICRO-ANIMATION & BLENDING
+        // =============================================================
+        if (mixerRef.current) mixerRef.current.update(delta);
+
+        // Add lively conversational head/chest rhythm while speaking
+        if (isTalking && !isDancing) {
+            const speechActivity = Math.min(Math.max((peak - 0.02) * 2.5, 0.0), 1.0);
+            if (bones.head) {
+                // Subtle head nod on speech emphasis
+                const nod = Math.sin(t * 4.8) * 0.022 * (0.3 + 0.7 * speechActivity);
+                bones.head.rotation.x += nod;
+                // Cute slight head tilt while speaking
+                bones.head.rotation.z += Math.sin(t * 1.6) * 0.018;
+                // Soft gaze direction toward mouse / user
+                const mouseX = state.mouse.x * 0.12;
+                const mouseY = state.mouse.y * 0.08;
+                bones.head.rotation.y = lerp(bones.head.rotation.y, mouseX + Math.sin(t * 0.6) * 0.012, 0.05);
+                bones.head.rotation.x = lerp(bones.head.rotation.x, -mouseY + nod, 0.05);
+            }
+            if (bones.chest) {
+                bones.chest.rotation.x += Math.sin(t * 2.4) * 0.006 * (0.5 + 0.5 * speechActivity);
             }
         }
 
         vrm.update(delta);
-        if (mixerRef.current) mixerRef.current.update(delta);
     });
 
     const handlePointerDown = (e) => {
@@ -499,6 +556,75 @@ function DanceCameraRig({ isDancing }) {
     return null;
 }
 
+const VALID_VRMA_NAMES = new Set([
+    "idle1", "idle2", "bang", "peace_sign", "scare_jump", "view_360", "view_360_stylish",
+    "blow_kiss", "happy_idle", "nod_yes", "look_around", "thankful", "thinking",
+    "angry", "greeting", "sadIdle", "kyun_dance", "dance1", "lag_queen",
+    "VRMA_01", "VRMA_02", "VRMA_03", "VRMA_04", "VRMA_05", "VRMA_06", "VRMA_07",
+    "pose_friendy", "pose_lillian", "pose_nyammy", "pose_wonderful", "Singing"
+]);
+
+const ANIM_ALIASES = {
+    // Descriptive names mapped to VRMA 1-5
+    vrma1: "view_360",
+    vrma_01: "view_360",
+    vrma2: "scare_jump",
+    vrma_02: "scare_jump",
+    vrma3: "peace_sign",
+    vrma_03: "peace_sign",
+    vrma4: "bang",
+    vrma_04: "bang",
+    vrma5: "view_360_stylish",
+    vrma_05: "view_360_stylish",
+    vrma6: "VRMA_06",
+    vrma_06: "VRMA_06",
+    vrma7: "VRMA_07",
+    vrma_07: "VRMA_07",
+
+    // Natural shorthand aliases
+    peace: "peace_sign",
+    v_sign: "peace_sign",
+    pistol: "bang",
+    hand_pistol: "bang",
+    gun: "bang",
+    scare: "scare_jump",
+    jump: "scare_jump",
+    jumpscare: "scare_jump",
+    "360": "view_360",
+    turntable: "view_360",
+    "360_style": "view_360_stylish",
+    "360_stylish": "view_360_stylish",
+    kiss: "blow_kiss",
+    blow_a_kiss: "blow_kiss",
+    "blow a kiss": "blow_kiss",
+    nod: "nod_yes",
+    "head nod": "nod_yes",
+    "head nod yes": "nod_yes",
+    yes: "nod_yes",
+    thank: "thankful",
+    thanks: "thankful",
+    grateful: "thankful",
+    think: "thinking",
+    ponder: "thinking",
+    curious: "look_around",
+    look: "look_around",
+    "look around": "look_around",
+    look_away: "look_around",
+    happy: "happy_idle",
+    excited: "happy_idle",
+    shrug: "VRMA_06",
+    tsundere: "angry",
+    sweet: "VRMA_07",
+    yandere: "VRMA_07",
+    wave: "greeting",
+    hello: "greeting",
+    dance: "kyun_dance",
+    // Per user instruction: do not use Taking animation; use idle1 for normal conversation
+    talk: "idle1",
+    talking: "idle1",
+    speaking: "idle1"
+};
+
 export default function VrmAvatar({
     emotion = "neutral",
     animation = "",
@@ -512,9 +638,24 @@ export default function VrmAvatar({
     onAnimationPlay = () => {},
     onInteraction = () => {}
 }) {
-    const activeAnim = animation || "idle1";
-    const animUrl = activeAnim ? (activeAnim.endsWith('.vrma') ? `/animations/${activeAnim}` : `/animations/${activeAnim}.vrma`) : null;
-    const isDancing = isDancingProp || animation === "kyun_dance" || animation === "dance1";
+    // 1. Resolve raw animation name through alias map
+    const rawAnim = (animation || "").replace(/\.vrma$/i, "").trim();
+    const resolvedName = ANIM_ALIASES[rawAnim.toLowerCase()] || rawAnim;
+
+    // 2. Select active animation:
+    // User rule: For normal conversation, stay in "idle1" (natural idle breathing).
+    // Only switch to an animation when an explicit expressive/emotional animation is requested!
+    let activeAnim = "idle1";
+    if (resolvedName && resolvedName !== "idle1" && VALID_VRMA_NAMES.has(resolvedName)) {
+        activeAnim = resolvedName;
+    } else if (resolvedName === "idle2") {
+        activeAnim = "idle2";
+    } else {
+        activeAnim = "idle1";
+    }
+
+    const animUrl = `/animations/${activeAnim}.vrma`;
+    const isDancing = isDancingProp || activeAnim === "kyun_dance" || activeAnim === "dance1" || activeAnim === "lag_queen" || activeAnim === "Singing";
 
     return (
         <div className="w-full h-full relative bg-transparent">

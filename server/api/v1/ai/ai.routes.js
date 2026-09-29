@@ -71,6 +71,8 @@ const auraRoutes = require("./aura.routes");
 const kiraRoutes = require("./kira.routes");
 const twoD = require("./2d.routes");
 const sttRoutes = require("./stt.routes");
+const grokRoutes = require("./grok.routes");
+const fishRoutes = require("./fish.routes");
 
 // Apply middleware
 router.use("/translate_text/ash", limiter, ashTranslatorRoutes);
@@ -89,5 +91,7 @@ router.use("/ash", ashTranslatorRoutes);
 router.use("/aura", auraRoutes);
 router.use("/kira", limiter, kiraRoutes);
 router.use("/2d", limiter, twoD);
+router.use("/grok", limiter, grokRoutes);
+router.use("/fish", limiter, fishRoutes);
 
 module.exports = router;

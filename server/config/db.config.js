@@ -12,7 +12,7 @@ const connectDB = async () => {
         console.log("mongodb connected with high-concurrency pool");
         debug(`MongoDB Connected: ${conn.connection.host}`);
     } catch (error) {
-        debug(`Error: ${error.message}`);
+        console.error("❌ MongoDB Connection Error:", error);
         console.log("error in db.config.js");
         process.exit(1); 
     }

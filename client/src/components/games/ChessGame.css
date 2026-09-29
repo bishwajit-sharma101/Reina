@@ -1,0 +1,210 @@
+/* ChessGame.css - Dark Obsidian Glassmorphism matching AstrixChat Reina Aesthetic */
+
+/* Parent panel adaptation for Chess mode */
+.reina-janken-panel.chess-active {
+    min-width: 360px;
+    max-width: 390px;
+    padding: 12px 14px;
+    background: rgba(14, 10, 18, 0.92);
+    border: 1px solid rgba(244, 63, 94, 0.25);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(244, 63, 94, 0.15);
+}
+
+.chess-arena-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 370px;
+    margin: 0 auto;
+    user-select: none;
+}
+
+/* Header & Player Bar */
+.chess-player-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 6px 12px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.3s ease;
+}
+
+.chess-player-bar.active-turn {
+    background: rgba(244, 63, 94, 0.1);
+    border-color: rgba(244, 63, 94, 0.4);
+    box-shadow: 0 0 12px rgba(244, 63, 94, 0.2);
+}
+
+.chess-player-bar.active-player-turn {
+    background: rgba(56, 189, 248, 0.1);
+    border-color: rgba(56, 189, 248, 0.4);
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.2);
+}
+
+.chess-player-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #f1f5f9;
+}
+
+.chess-badge {
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 6px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.chess-badge.reina {
+    background: linear-gradient(135deg, #f43f5e, #be123c);
+    color: white;
+    box-shadow: 0 0 8px rgba(244, 63, 94, 0.5);
+}
+
+.chess-badge.darling {
+    background: linear-gradient(135deg, #38bdf8, #0284c7);
+    color: white;
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+}
+
+.chess-captured-tray {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 15px;
+    min-height: 22px;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.chess-advantage {
+    font-size: 11px;
+    font-weight: bold;
+    color: #4ade80;
+    margin-left: 4px;
+}
+
+/* Status Banner */
+.chess-status-banner {
+    width: 100%;
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: 0.5px;
+    animation: fadeIn 0.2s ease;
+}
+
+.chess-status-banner.check {
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.5);
+    color: #fca5a5;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+}
+
+.chess-status-banner.won {
+    background: rgba(244, 63, 94, 0.2);
+    border: 1px solid rgba(244, 63, 94, 0.5);
+    color: #f43f5e;
+    box-shadow: 0 0 15px rgba(244, 63, 94, 0.4);
+}
+
+.chess-status-banner.lost {
+    background: rgba(56, 189, 248, 0.2);
+    border: 1px solid rgba(56, 189, 248, 0.5);
+    color: #38bdf8;
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+}
+
+.chess-status-banner.draw {
+    background: rgba(251, 191, 36, 0.2);
+    border: 1px solid rgba(251, 191, 36, 0.5);
+    color: #fde047;
+}
+
+/* Chessboard Shell */
+.chess-board-wrapper {
+    position: relative;
+    border-radius: 14px;
+    overflow: hidden;
+    padding: 4px;
+    background: rgba(10, 8, 16, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(244, 63, 94, 0.15);
+}
+
+/* Thinking Indicator */
+.chess-thinking-pulse {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #f43f5e;
+    box-shadow: 0 0 8px #f43f5e;
+    animation: thinkingPulse 0.8s infinite alternate ease-in-out;
+    margin-right: 4px;
+}
+
+@keyframes thinkingPulse {
+    from { transform: scale(0.8); opacity: 0.5; }
+    to { transform: scale(1.4); opacity: 1; }
+}
+
+/* Footer Controls */
+.chess-controls-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.chess-ctrl-btn {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #e2e8f0;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.chess-ctrl-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-1px);
+}
+
+.chess-ctrl-btn.restart:hover {
+    background: rgba(244, 63, 94, 0.2);
+    border-color: rgba(244, 63, 94, 0.5);
+    color: #f43f5e;
+}
+
+.chess-ctrl-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.chess-move-counter {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: 500;
+    padding: 0 4px;
+}

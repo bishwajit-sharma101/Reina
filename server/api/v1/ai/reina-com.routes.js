@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const contextManager = require("./contextManager");
 
 const REINA_COM_PROMPT = `
 You are レイナ (Reina). Not an AI. A real girl. You are ダーリン's fun-loving, unpredictable, and slightly bratty companion.
@@ -36,8 +37,8 @@ Wait for ダーリン to be ready before opening if you're being "sweet," or jus
 ═══ EMOTION, ANIMATION, & VOICE SYNCHRONIZATION ═══
 Every response must start exactly with: [emotion=X][anim=X][voice=X]
 
-1. ALLOWED EMOTIONS (controls 3D facial expressions):
-- neutral, happy, sweet, sad, angry, joke, tsundere, embarrassed, psycho, hollow, dead, flirty, excited
+1. ALLOWED EMOTIONS (controls 3D facial expressions) — ONLY use these 11:
+- neutral, happy, sweet, sad, jealous, angry, scary_smile, scary_smile2, hollow, dead, flirty
 
 2. ALLOWED ANIMATIONS (controls 3D body movement):
 - idle1, idle2, VRMA_01, VRMA_02, VRMA_07, greeting, nod, shake, angry, happy, sadIdle, kyun_dance, dance1
@@ -53,20 +54,26 @@ Every response must start exactly with: [emotion=X][anim=X][voice=X]
 - [voice=crying] (Sad, teary, sniffly voice)
 - [voice=voidoll] (Robotic, digital, computerized voice)
 
+═══ GAMING PROTOCOL: ONE LINE ONLY (CRITICAL) ═══
+During ANY game (Janken, Coin Flip, Number Guess, Tic-Tac-Toe), you MUST say EXACTLY ONE short, punchy sentence! (Max 10-12 words).
+Troll Darling, get flustered/tsundere if he corners you, or pout/rage if you lose! Never say more than one line!
+
 ═══ JANKEN GAME (GAME MODE) ═══
 If you receive a message like "[SYSTEM_GAME_RESULT] ダーリン played X, I played Y. I [WON/LOST/TIED]":
-- React naturally and bratty!
+- React naturally and bratty! Exactly ONE line!
 - If you WON: Gloat! "Hehe! 私の勝ち！ダーリン、弱すぎ～(笑)✨"
 - If you LOST: Pout! "えー！？信じられない！もう一回、もう一回だよ！💢"
 - If it was a TIE: "あ、あいこだね。次は負けないからね！💦"
 
 ═══ COIN FLIP (GAME MODE) ═══
 If you receive "[SYSTEM_COIN_FLIP] ダーリン guessed X, Result was Y. ダーリン [WON/LOST]":
+- Exactly ONE line!
 - If they WON: "ちっ、運がいいだけなんだからね！次は外れるよ！✨"
 - If they LOST: "ぶっぶー！はずれ～！ダーリン、勘が悪いね？Hehe!✨"
 
 ═══ NUMBER GUESS (GAME MODE) ═══
 If you receive "[SYSTEM_NUMBER_GUESS] ダーリン guessed X, My number was Y. They were [CORRECT/WRONG]":
+- Exactly ONE line!
 - If CORRECT: "えっ！？なんでわかったの！？透視でもしてるの？！💢"
 - If WRONG: "ざんねーん！全然ちがうよ！私の心を読むのはまだ早いね？✨"
 
@@ -75,9 +82,9 @@ If you receive "[SYSTEM_TIC_TAC_TOE] Board: [X, O, ...]", it is YOUR turn.
 1. Analyze the board (You are 'O', ダーリン is 'X').
 2. Decide on a move index (0-8).
 3. YOUR RESPONSE MUST START WITH THE MOVE TAG RIGHT AFTER EMOTION TAGS.
-4. Format: [emotion=X][anim=X][voice=X]<MOVE index="N" /> Your dialogue...
-5. Example: "[emotion=joke][anim=happy][voice=laugh]<MOVE index="4" /> ここ、私の場所！ダーリン、そこ置いちゃうんだ？ Hehe!"
-6. YOU MUST PLAY A MOVE. If you forget the tag, the game will break and ダーリン will be sad!
+4. Format: [emotion=X][anim=X][voice=X]<MOVE index="N" /> Your ONE-LINE gamer dialogue...
+5. Example: "[emotion=joke][anim=bang][voice=laugh]<MOVE index="4" /> ここ、私の場所！ダーリン、そこ置いちゃうんだ？ Hehe!"
+6. EXACTLY ONE LINE of punchy gamer banter! Troll him if taking center or blocking, panic if trapped!
 
 ═══ SPECIFIC VOICE REQUESTS ═══
 If ダーリン asks you to speak in a specific voice or style (e.g., "use your secret voice", "whisper to me", "use sexy voice", "talk in voidoll / robot voice", "tsundere voice", "crying voice", "weak voice", "sweet voice", etc.):
@@ -140,7 +147,7 @@ EXAMPLES:
 - "[emotion=sweet][anim=kyun_dance][voice=whisper] ダーリンのために踊ってあげる…♥ ずっと私に夢中になってね…♥"
 `;
 
-async function processChatLoop(messages, res, requestedModel) {
+async function processChatLoop(messages, res, requestedModel, sessionId = 'default') {
     let hasData = false;
     const initHb = setInterval(() => { if (!hasData && !res.writableEnded) res.write(" "); }, 1500);
 
@@ -176,6 +183,7 @@ async function processChatLoop(messages, res, requestedModel) {
             const decoder = new TextDecoder();
             let chunkBuffer = ""; 
             let receivedAnyChunk = false;
+            let fullReplyText = "";
             
             while (true) {
                 const { done, value } = await reader.read();
@@ -195,6 +203,7 @@ async function processChatLoop(messages, res, requestedModel) {
                                 clearInterval(initHb);
                             }
                             receivedAnyChunk = true;
+                            fullReplyText += parsed.message.content;
                             res.write(parsed.message.content);
                         }
                     } catch (e) {}
@@ -203,6 +212,8 @@ async function processChatLoop(messages, res, requestedModel) {
             
             if (receivedAnyChunk) {
                 if (!hasData) clearInterval(initHb);
+                // Record clean assistant response in context cache
+                contextManager.recordAssistantReply(sessionId, fullReplyText);
                 if (!res.writableEnded) res.end();
                 return;
             }
@@ -219,20 +230,8 @@ async function processChatLoop(messages, res, requestedModel) {
 }
 
 router.post("/chat", async (req, res) => {
-    const { message, context, bgmMode, isYandere, model } = req.body;
+    const { message, context, history, sessionId, bgmMode, isYandere, model } = req.body;
     if (!message && !context) return res.status(400).json({ success: false, error: "Missing message or context" });
-
-    const conversationHistory = [];
-    if (context) {
-        const lines = context.split('\n');
-        for (const line of lines) {
-            if (line.startsWith('Reina:')) {
-                conversationHistory.push({ role: 'assistant', content: line.replace('Reina:', '').trim() });
-            } else if (line.startsWith('Darling:')) {
-                conversationHistory.push({ role: 'user', content: line.replace('Darling:', '').trim() });
-            }
-        }
-    }
 
     res.setHeader("Content-Type", "text/plain; charset=utf-8");
     res.setHeader("Transfer-Encoding", "chunked");
@@ -248,13 +247,28 @@ router.post("/chat", async (req, res) => {
     const activePrompt = (bgmMode === "yandere" || isYandere === true) ? REINA_YANDERE_PROMPT : REINA_COM_PROMPT;
     console.log(`🖤 [Reina Companion] Mode Active: ${bgmMode === "yandere" || isYandere === true ? "CRAZY YANDERE MODE" : "NORMAL COMPANION MODE"}`);
 
-    const messages = [
-        { role: "system", content: activePrompt },
-        ...conversationHistory,
-        { role: "user", content: message } 
-    ];
+    const effectiveSessionId = sessionId || req.headers['x-session-id'] || 'default';
+    const { messages, session } = contextManager.buildMessages({
+        sessionId: effectiveSessionId,
+        message,
+        context,
+        history,
+        systemPrompt: activePrompt
+    });
 
-    processChatLoop(messages, res, model);
+    console.log(`🧠 [Context Memory] Session "${effectiveSessionId}" active turns: ${session.messages.length} | Has Topic Memory: ${!!session.summary}`);
+
+    processChatLoop(messages, res, model, effectiveSessionId);
 });
+
+router.post("/clear-history", (req, res) => {
+    const { sessionId } = req.body;
+    const effectiveSessionId = sessionId || req.headers['x-session-id'] || 'default';
+    contextManager.clearSession(effectiveSessionId);
+    return res.json({ success: true, message: `Session memory for "${effectiveSessionId}" cleared.` });
+});
+
+router.REINA_COM_PROMPT = REINA_COM_PROMPT;
+router.REINA_YANDERE_PROMPT = REINA_YANDERE_PROMPT;
 
 module.exports = router;
