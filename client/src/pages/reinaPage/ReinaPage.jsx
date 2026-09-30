@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
-import { Send, Heart, ChevronLeft, Settings2, Volume2, VolumeX, X } from 'lucide-react';
+import { Send, Heart, ChevronLeft, Settings2, Volume2, VolumeX, X, Download } from 'lucide-react';
 import VrmAvatar from '../../components/diary/VrmAvatar';
 import Live2dAvatar from '../../components/diary/Live2dAvatar';
 import { whisperSTT } from '../../utils/whisperStt';
@@ -21,7 +21,7 @@ const getSessionId = () => {
 
 // 11 Authoritative 3D VRM Expressions (strictly matching Settings drawer)
 export const ALLOWED_VRM_EMOTIONS = new Set([
-    "neutral", "happy", "sweet", "sad", "jealous", "angry",
+    "neutral", "sweet", "sad", "jealous", "angry",
     "scary_smile", "scary_smile2", "hollow", "dead", "flirty"
 ]);
 
@@ -34,9 +34,10 @@ export function sanitizeVrmEmotion(raw) {
         joke: "flirty",
         tsundere: "angry",
         embarrassed: "jealous",
-        excited: "happy",
-        joy: "happy",
-        fun: "happy",
+        excited: "sweet",
+        joy: "sweet",
+        happy: "sweet",
+        fun: "sweet",
         psycho: "scary_smile",
         mad: "angry",
         sorrow: "sad",
@@ -78,6 +79,15 @@ const ReinaPage = () => {
     const aiTypingTimeoutRef = useRef(null);
 
     // Persist conversation messages locally so refresh never loses context
+    
+    useEffect(() => {
+        if (textareaRef.current) {
+            textareaRef.current.style.height = '24px';
+            const scrollHeight = textareaRef.current.scrollHeight;
+            textareaRef.current.style.height = Math.min(scrollHeight, 150) + 'px';
+        }
+    }, [input]);
+
     useEffect(() => {
         if (messages && messages.length > 0) {
             try {
@@ -110,6 +120,12 @@ const ReinaPage = () => {
     const [modelName, setModelName] = useState("Reina");
     const [activeSentence, setActiveSentence] = useState("");
     const [showAnimSettings, setShowAnimSettings] = useState(false);
+    const [showMemoryModal, setShowMemoryModal] = useState(false);
+    const [showEvolveModal, setShowEvolveModal] = useState(false);
+    const [showChatLog, setShowChatLog] = useState(false);
+    const chatLogRef = useRef(null);
+    const textareaRef = useRef(null);
+    const [memoryData, setMemoryData] = useState({ memory: [], diary: [], persona: [] });
     const [vrmLoading, setVrmLoading] = useState(true);
     const [loadingStep, setLoadingStep] = useState(0);
     const [loadingText, setLoadingText] = useState("Initializing Reina...");
@@ -374,6 +390,7 @@ const ReinaPage = () => {
     }, [bgmMode, isMuted]);
 
     // ─── DANCE SONG AUDIO & STAGING SEQUENCE ───
+    const sweetThemeAudioRef = useRef(null);
     const danceAudioRef = useRef(null);
     const [dancePhase, setDancePhase] = useState("idle"); // "idle" | "staging" | "dancing" | "ending"
     const [renderedDanceAnim, setRenderedDanceAnim] = useState("");
@@ -700,61 +717,43 @@ const ReinaPage = () => {
         const isDanceAnim = animation === "kyun_dance" || animation === "dance1" || animation === "Singing" || animation === "lag_queen";
         if (bgmMode === "off" || vrmLoading || isDanceAnim) {
             if (bgmIntervalRef.current) clearInterval(bgmIntervalRef.current);
+            if (sweetThemeAudioRef.current) sweetThemeAudioRef.current.pause();
             return;
         }
 
+        if ((bgmMode === "sweet_love" || bgmMode === "tsundere_groove") && sweetThemeAudioRef.current) {
+            const expectedSrc = bgmMode === "sweet_love" ? "/song/Angel Humming.mp3" : "/song/Tsundere Groove.mp3";
+            sweetThemeAudioRef.current.volume = 0.15;
+            if (!sweetThemeAudioRef.current.src.endsWith(expectedSrc.replace(/ /g, "%20"))) {
+                sweetThemeAudioRef.current.src = expectedSrc;
+            }
+            if (sweetThemeAudioRef.current.paused) {
+                sweetThemeAudioRef.current.play().catch(e => console.warn(e));
+            }
+        } else if (sweetThemeAudioRef.current) {
+            sweetThemeAudioRef.current.pause();
+        }
+
         let melody = [];
-        if (bgmMode === "sweet_love") {
-            // Deeply Emotional & Peaceful Anime Romance Lullaby ("Just Us Two in Peace")
-            melody = [
-                523.25,  // C5 (Tender start)
-                659.25,  // E5
-                783.99,  // G5
-                1046.50, // C6 (Warm peak)
-                987.77,  // B5
-                880.00,  // A5
-                783.99,  // G5
-                659.25,  // E5
-                698.46,  // F5 (Peaceful warmth)
-                880.00,  // A5
-                1046.50, // C6
-                1174.66, // D6 (Emotional high peak)
-                1046.50, // C6
-                880.00,  // A5
-                783.99,  // G5
-                659.25   // E5
-            ];
-        } else {
-            // Obsessive Yandere Lullaby (A Minor / D Minor)
-            melody = [
-                440.00, // A4
-                523.25, // C5
-                659.25, // E5
-                830.61, // G#5
-                880.00, // A5
-                698.46, // F5
-                587.33, // D5
-                659.25  // E5
-            ];
+        if (bgmMode === "yandere") {
+            melody = [440.00, 523.25, 659.25, 830.61, 880.00, 698.46, 587.33, 659.25];
         }
 
         let idx = 0;
         bgmIntervalRef.current = setInterval(() => {
-            if (bgmMode === "sweet_love") {
-                playSweetLoveNote(melody[idx], 2.2);
-            } else if (bgmMode === "yandere") {
+            if (bgmMode === "yandere") {
                 playMusicBoxNote(melody[idx], 1.8);
                 if (idx === 0 || idx === 4) {
                     playLowHeartThud(0.1);
                 }
+                idx = (idx + 1) % melody.length;
             }
-            idx = (idx + 1) % melody.length;
-        }, bgmMode === "sweet_love" ? 750 : 900);
+        }, 900);
 
         return () => {
             if (bgmIntervalRef.current) clearInterval(bgmIntervalRef.current);
         };
-    }, [bgmMode, vrmLoading, animation, playSweetLoveNote, playMusicBoxNote]);
+    }, [bgmMode, vrmLoading, animation, playMusicBoxNote]);
 
     // Idle/Dark Thoughts state
     const [showDarkThoughts, setShowDarkThoughts] = useState(false);
@@ -1070,7 +1069,7 @@ const ReinaPage = () => {
                     glitch: Math.random() > 0.6
                 };
                 setVisibleScaryPhrases(prev => [...prev, newPhrase]);
-                if (Math.random() > 0.4) playShutter();
+                if (Math.random() > 0.4) playLowHeartThud(0.8);
                 i++;
             } else {
                 clearInterval(interval);
@@ -1452,7 +1451,7 @@ const ReinaPage = () => {
         }
         
         const systemMsg = `[SYSTEM_GAME_RESULT] Darling played ${move}, I played ${rMove}. Result: I ${result}!
-CRITICAL: Respond with EXACTLY ONE short, punchy sentence (max 10-12 words) of high gamer emotion (troll him if you won, salty rage/pout if you lost, playful teasing if tied)! Max 1 line!`;
+CRITICAL: Respond with UP TO TWO short, punchy lines (max 2 lines) of high gamer emotion (troll him if you won, salty rage/pout if you lost, playful teasing if tied)! Max 2 lines!`;
         await sendGameAction(systemMsg, `(Plays Janken: ${move})`);
     };
 
@@ -1474,7 +1473,7 @@ CRITICAL: Respond with EXACTLY ONE short, punchy sentence (max 10-12 words) of h
         else if (gRes === "WON") { setConsecutiveLosses(0); setIsPouting(false); }
 
         const systemMsg = `[SYSTEM_COIN_FLIP] Darling guessed ${guess}, Result was ${result}. Result: I ${gRes}!
-CRITICAL: Respond with EXACTLY ONE short, punchy sentence (max 10-12 words) of high gamer emotion (smug troll if he missed, flustered salty denial if he got lucky)! Max 1 line!`;
+CRITICAL: Respond with UP TO TWO short, punchy lines (max 2 lines) of high gamer emotion (smug troll if he missed, flustered salty denial if he got lucky)! Max 2 lines!`;
         await sendGameAction(systemMsg, `(Flips Coin: ${guess})`);
     };
 
@@ -1496,7 +1495,7 @@ CRITICAL: Respond with EXACTLY ONE short, punchy sentence (max 10-12 words) of h
         else if (gRes === "WON") { setConsecutiveLosses(0); setIsPouting(false); }
 
         const systemMsg = `[SYSTEM_NUMBER_GUESS] Darling guessed ${num}, My number was ${rNum}. Result: I ${gRes}!
-CRITICAL: Respond with EXACTLY ONE short, punchy sentence (max 10-12 words) of high gamer emotion (flustered accusation of mind-reading if correct, smug teasing if wrong)! Max 1 line!`;
+CRITICAL: Respond with UP TO TWO short, punchy lines (max 2 lines) of high gamer emotion (flustered accusation of mind-reading if correct, smug teasing if wrong)! Max 2 lines!`;
         await sendGameAction(systemMsg, `(Guesses Number: ${num})`);
     };
 
@@ -1539,8 +1538,8 @@ CRITICAL: Respond with EXACTLY ONE short, punchy sentence (max 10-12 words) of h
             setGameResult(result);
             if (turn === 'X') {
                 const systemMsg = `[SYSTEM_TIC_TAC_TOE] Game Over. Result: I ${result}. Winner: ${winner || 'Draw'}. Board: ${JSON.stringify(newBoard)}
-CRITICAL: Use ONLY one of the 11 valid emotions: neutral, happy, sweet, sad, jealous, angry, scary_smile, scary_smile2, hollow, dead, flirty.
-Respond with EXACTLY ONE short, punchy sentence (max 10-12 words) with peak gamer emotion (salty rage/pout if you lost, smug esports champion gloating if you won, or banter if draw)! Max 1 line!`;
+CRITICAL: Use ONLY one of the 11 valid emotions: neutral, sweet, sad, jealous, angry, scary_smile, scary_smile2, hollow, dead, flirty.
+Respond with UP TO TWO short, punchy lines (max 2 lines) with peak gamer emotion (salty rage/pout if you lost, smug esports champion gloating if you won, or banter if draw)! Max 2 lines!`;
                 await sendGameAction(systemMsg, `(Tic-Tac-Toe: ${winner ? (winner === 'X' ? 'I win!' : 'Reina wins!') : 'Draw'})`);
             }
 
@@ -1563,8 +1562,8 @@ Board: ${JSON.stringify(newBoard)}
 Available Indices: ${newBoard.map((v, i) => v === null ? i : null).filter(v => v !== null).join(', ')}
 Your Turn ('O').
 MANDATORY: START your response with [emotion=X][anim=X]<MOVE index="N" />.
-CRITICAL: Use ONLY one of the 11 valid facial emotions: neutral, happy, sweet, sad, jealous, angry, scary_smile, scary_smile2, hollow, dead, flirty.
-Follow the move tag with EXACTLY ONE short, punchy sentence (max 10-12 words) of high-energy gamer banter! Troll him if you block him or take center, get flustered/panicked if he corners you, or tease him! DO NOT say more than one line!`;
+CRITICAL: Use ONLY one of the 11 valid facial emotions: neutral, sweet, sad, jealous, angry, scary_smile, scary_smile2, hollow, dead, flirty.
+Follow the move tag with UP TO TWO short, punchy lines (max 2 lines) of high-energy gamer banter! Troll him if you block him or take center, get flustered/panicked if he corners you, or tease him! DO NOT say more than two lines!`;
             await sendGameAction(systemMsg, `(Tic-Tac-Toe: I played at ${index})`);
         } else {
             isPlayerTurnRef.current = true;
@@ -1774,6 +1773,16 @@ Follow the move tag with EXACTLY ONE short, punchy sentence (max 10-12 words) of
                 }
             }
 
+            
+            // === [DEBUG LLM CUTOFF DETECTION] ===
+            console.log("==========================================");
+            console.log("[DEBUG] LLM FULL RAW OUTPUT:");
+            console.log(fullText);
+            console.log("==========================================");
+            if (!/[。！？!?.…~♥\n>]$/.test(fullText.trim())) {
+                console.warn("[DEBUG WARNING] Reina's output might have been CUT OFF! It didn't end with typical punctuation or a closing tag. Length:", fullText.length);
+            }
+
             // Process any remaining sentence buffer if nothing was queued yet
             if (sentenceBuffer.trim() && (!isGameAction || sentenceCount === 0)) {
                 let cleanFinal = sentenceBuffer
@@ -1788,6 +1797,37 @@ Follow the move tag with EXACTLY ONE short, punchy sentence (max 10-12 words) of
             console.error(err);
         } finally {
             setIsLoading(false);
+            
+            // --- TIC-TAC-TOE AI FAILSAFE ---
+            const currentBoard = tttBoardRef.current;
+            const hasEmpty = currentBoard && currentBoard.includes(null);
+            
+            // Need a quick checkWinner inline since we don't have it here, or just assume if it's not player turn and not empty
+            // Wait, we can just check if Reina won or Player won by evaluating the board
+            const winLines = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8],
+                [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                [0, 4, 8], [2, 4, 6]
+            ];
+            let alreadyWon = false;
+            if (currentBoard) {
+                for (let line of winLines) {
+                    const [a, b, c] = line;
+                    if (currentBoard[a] && currentBoard[a] === currentBoard[b] && currentBoard[a] === currentBoard[c]) {
+                        alreadyWon = true;
+                    }
+                }
+            }
+
+            if (gameTypeRef.current === 'tictactoe' && !isPlayerTurnRef.current && hasEmpty && !alreadyWon) {
+                console.log("[TIC-TAC-TOE] Reina failed to provide a valid move tag! Forcing random fallback move...");
+                const available = currentBoard.map((v, i) => v === null ? i : null).filter(v => v !== null);
+                if (available.length > 0) {
+                    const fallbackIndex = available[Math.floor(Math.random() * available.length)];
+                    handleTttMove(fallbackIndex, 'O');
+                }
+            }
+
             // Only auto-close if the game is OVER or if it's a one-shot game (Janken/Coin)
             if (gameResult || (gameTypeRef.current !== 'tictactoe' && gameTypeRef.current !== 'chess')) {
                 setTimeout(() => {
@@ -1797,6 +1837,26 @@ Follow the move tag with EXACTLY ONE short, punchy sentence (max 10-12 words) of
                     gameTypeRef.current = null;
                 }, 4000);
             }
+        }
+    };
+
+    
+    
+    useEffect(() => {
+        if (chatLogRef.current) {
+            chatLogRef.current.scrollTop = chatLogRef.current.scrollHeight;
+        }
+    }, [messages, showChatLog]);
+    
+    const fetchMemoryData = async () => {
+        try {
+            const res = await fetch('http://localhost:5000/api/v1/ai/reina-com/memory');
+            const data = await res.json();
+            if (data.success) {
+                setMemoryData({ memory: data.memory, diary: data.diary, persona: data.persona });
+            }
+        } catch (e) {
+            console.error("Failed to fetch memory", e);
         }
     };
 
@@ -2237,7 +2297,7 @@ Follow the move tag with EXACTLY ONE short, punchy sentence (max 10-12 words) of
                 
                 // 1. Build-up: Intense glitching on the current button
                 setIsBackBtnGlitchingIntense(true);
-                playShutter();
+                playLowHeartThud(0.8);
                 
                 setTimeout(() => {
                     // 2. Transformation: Red '逃げないで' with light glitch
@@ -2307,6 +2367,39 @@ Follow the move tag with EXACTLY ONE short, punchy sentence (max 10-12 words) of
         }
     };
 
+    
+    const triggerManualLockdown = () => {
+        if (isLocked) return;
+        console.log("MANUAL NO ESCAPE TRIGGERED");
+        setIsBackBtnGlitchingIntense(true);
+        playLowHeartThud(0.8);
+        setTimeout(() => {
+            setBackBtnText("逃げないで");
+            setIsBackBtnGlitchingIntense(false);
+            setIsBackBtnPlea(true);
+            setEmotion("scary_smile2");
+            setAnimation("idle1");
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(err => console.warn("Fullscreen blocked:", err));
+            }
+            setIsLocked(true);
+            setScaryTextActive(true);
+        }, 3200);
+        if (lockTimeoutRef.current) clearTimeout(lockTimeoutRef.current);
+        lockTimeoutRef.current = setTimeout(() => {
+            const releaseMsg = "もういいよ。行って。ダーリンのことを許してあげる。♥";
+            setMessages(prev => [...prev, { sender: 'ai', text: releaseMsg }]);
+            setLatestAiMsg(releaseMsg);
+            setTargetTypingText(releaseMsg);
+            setIsWhiteout(true);
+            setTimeout(() => {
+                setIsLocked(false);
+                setScaryTextActive(false);
+                setIsWhiteout(false);
+            }, 400); 
+        }, 300000);
+    };
+
     const handleResetGlitches = () => {
         setIsWhiteout(true);
         setTimeout(() => {
@@ -2337,9 +2430,53 @@ Follow the move tag with EXACTLY ONE short, punchy sentence (max 10-12 words) of
         }));
     }, [isDancing]);
 
-    return (
+    const downloadChatHistory = () => {
+        const historyText = messages
+            .filter(m => m.text.trim().length > 0)
+            .map(msg => `[${msg.sender.toUpperCase()}]: ${msg.text.replace(/<[^>]+>/g, '').replace(/\\[[^\\]]+\\]/g, '').trim()}`)
+            .join('\n\n');
+        const blob = new Blob([historyText], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `reina_chat_${new Date().toISOString().slice(0,10)}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };    return (
         <div className={`reina-page ${isDancing ? 'dance-cinematic-mode' : ''} ${isPostLoadGlitch ? 'active-glitch' : ''} ${isLocked ? 'locked-shake' : ''}`}>
+             {showMemoryModal && (
+                <div className="memory-modal-overlay" onClick={() => setShowMemoryModal(false)}>
+                    <div className="memory-modal-content" onClick={e => e.stopPropagation()}>
+                        <button className="memory-modal-close" onClick={() => setShowMemoryModal(false)}>×</button>
+                        <h2 className="memory-modal-title">🧠 Reina's Brain</h2>
+
+
+
+                        
+                        <div className="memory-section">
+                            <h3>📌 Core Memory (Facts)</h3>
+                            {memoryData.memory.length === 0 ? <p className="memory-empty">Nothing saved yet...</p> : (
+                                <ul className="memory-list">
+                                    {memoryData.memory.map((m, i) => <li key={i}>{m}</li>)}
+                                </ul>
+                            )}
+                        </div>
+
+                        <div className="memory-section">
+                            <h3>📖 Secret Diary (Journal)</h3>
+                            {memoryData.diary.length === 0 ? <p className="memory-empty">Nothing saved yet...</p> : (
+                                <ul className="diary-list">
+                                    {memoryData.diary.map((d, i) => <li key={i}>{d}</li>)}
+                                </ul>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
              {isWhiteout && <div className="reveal-whiteout" />}
+             <audio ref={sweetThemeAudioRef} src="/song/Angel Humming.mp3" loop />
              
             {isDancing && animation === "Singing" && (
                 <div 
@@ -2440,6 +2577,93 @@ Follow the move tag with EXACTLY ONE short, punchy sentence (max 10-12 words) of
                         {selectedModel === "kira" ? "✨ Kira (キラ) ✨" : "♥ Reina (ずんだもん) ♥"}
                     </span>
                     <div style={{ width: 60 }} /> {/* spacer */}
+                </div>
+            )}
+
+            {/* Sidebar Tools & Chat Log */}
+            {!isDancing && (
+                <>
+                    <div className="reina-sidebar-tools">
+                        <button 
+                            className="sidebar-tool-btn" 
+                            onClick={() => setShowChatLog(true)}
+                            style={{ opacity: showChatLog ? 0 : 1, pointerEvents: showChatLog ? 'none' : 'auto' }}
+                        >
+                            💬 Chat History
+                        </button>
+                        
+                        <button
+                            className="sidebar-tool-btn"
+                            onClick={() => {
+                                fetchMemoryData();
+                                setShowMemoryModal(true);
+                            }}
+                        >
+                            🧠 View Memory
+                        </button>
+                        
+                        <button
+                            className="sidebar-tool-btn evolve-btn"
+                            onClick={() => {
+                                fetchMemoryData();
+                                setShowEvolveModal(true);
+                            }}
+                        >
+                            🧬 Evolution Log
+                        </button>
+                    </div>
+
+                    <div className={`chat-log-panel ${showChatLog ? 'open' : ''}`}>
+                        <div className="chat-log-header">
+                            <span>💬 Message Log</span>
+                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                <button className="chat-log-close" onClick={downloadChatHistory} title="Download Chat History" style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                                    <Download size={16} />
+                                </button>
+                                <button className="chat-log-close" onClick={() => setShowChatLog(false)}>×</button>
+                            </div>
+                        </div>
+                        <div className="chat-log-messages" ref={chatLogRef}>
+                            {messages.filter(m => m.text.trim().length > 0).map((msg, i) => (
+                                <div key={i} className={`chat-bubble ${msg.sender}`}>
+                                    {msg.text.replace(/<[^>]+>/g, '').replace(/\[[^\]]+\]/g, '').trim()}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </>
+            )}
+
+            
+            {/* Evolution Modal */}
+            {showEvolveModal && (
+                <div className="memory-modal-overlay" onClick={() => setShowEvolveModal(false)}>
+                    <div className="memory-modal-content evolve-theme" onClick={e => e.stopPropagation()}>
+                        <button className="memory-modal-close" onClick={() => setShowEvolveModal(false)}>×</button>
+                        <h2 className="memory-modal-title evolve-title">🧬 Personality Evolution History</h2>
+                        
+                        <div className="memory-section">
+                            <p className="evolve-desc">A complete log of every time Reina chose to mutate her own personality.</p>
+                            {(!memoryData.persona || memoryData.persona.length === 0) ? (
+                                <div className="evolve-empty">
+                                    <h3>Base Personality Active (Tsundere)</h3>
+                                    <p>She has not mutated yet...</p>
+                                </div>
+                            ) : (
+                                <div className="evolve-timeline">
+                                    {memoryData.persona.map((p, i) => {
+                                        const isLatest = i === memoryData.persona.length - 1;
+                                        return (
+                                            <div key={i} className={`evolve-card ${isLatest ? 'active' : ''}`}>
+                                                {isLatest && <span className="active-badge">CURRENTLY ACTIVE</span>}
+                                                <p className="evolve-text">{p}</p>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
             )}
 
@@ -2560,26 +2784,33 @@ Follow the move tag with EXACTLY ONE short, punchy sentence (max 10-12 words) of
             {/* Mode & Action Buttons */}
             {!isDancing && (
                 <>
+                    
+
                     <button
                         className={`reina-bgm-btn mode-${bgmMode}`}
                         style={{ zIndex: 1000 }}
                         onClick={() => {
                             initAudio();
                             setBgmMode(prev => {
-                                const nextMode = prev === 'yandere' ? 'sweet_love' : 'yandere';
+                                let nextMode;
+                                if (prev === 'yandere') nextMode = 'sweet_love';
+                                else if (prev === 'sweet_love') nextMode = 'tsundere_groove';
+                                else if (prev === 'tsundere_groove') nextMode = 'off';
+                                else nextMode = 'yandere';
+
                                 if (nextMode === 'yandere') {
                                     setEmotion("scary_smile2");
                                     setAnimation("VRMA_07");
-                                } else {
+                                } else if (nextMode === 'sweet_love' || nextMode === 'tsundere_groove') {
                                     setEmotion("sweet");
                                     setAnimation("idle1");
                                 }
                                 return nextMode;
                             });
                         }}
-                        title="Toggle Persona & System Prompt (Sweet Love vs Yandere Mode)"
+                        title="Toggle BGM & Persona (Yandere -> Sweet -> Off)"
                     >
-                        {bgmMode === 'yandere' ? '🥀 YANDERE MODE' : '💕 SWEET MODE'}
+                        {bgmMode === 'yandere' ? '🥀 YANDERE MODE' : bgmMode === 'sweet_love' ? '💕 SWEET MODE' : bgmMode === 'tsundere_groove' ? '🎵 TSUNDERE GROOVE' : '🔇 MUSIC OFF'}
                     </button>
 
                     {/* Standalone Mute Button */}
@@ -2673,7 +2904,15 @@ Follow the move tag with EXACTLY ONE short, punchy sentence (max 10-12 words) of
                         <div className="picker-header">
                             <span>Conversation Memory</span>
                         </div>
-                        <div style={{ display: 'flex', gap: '8px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <button
+                                className="anim-btn"
+                                style={{ width: '100%', borderColor: 'rgba(244, 63, 94, 0.4)', color: '#f43f5e' }}
+                                onClick={triggerManualLockdown}
+                                title="Manually trigger the Yandere Lockdown sequence"
+                            >
+                                🔒 Trigger Yandere Lock
+                            </button>
                             <button
                                 className="anim-btn"
                                 style={{ width: '100%', borderColor: 'rgba(244, 63, 94, 0.4)', color: '#f43f5e' }}
@@ -2727,7 +2966,7 @@ Follow the move tag with EXACTLY ONE short, punchy sentence (max 10-12 words) of
                             }}>Reset</button>
                         </div>
                         <div className="picker-grid models">
-                            {["neutral", "happy", "sweet", "sad", "jealous", "angry", "scary_smile", "scary_smile2", "hollow", "dead", "flirty"].map(em => (
+                            {["neutral", "sweet", "sad", "jealous", "angry", "scary_smile", "scary_smile2", "hollow", "dead", "flirty"].map(em => (
                                 <button
                                     key={em}
                                     className={`anim-btn ${emotion === em ? 'active' : ''}`}
@@ -2806,67 +3045,60 @@ Follow the move tag with EXACTLY ONE short, punchy sentence (max 10-12 words) of
             {!isDancing && (
                 <div className="reina-bottom-input">
                     <form className="reina-input-glass" onSubmit={handleSend}>
-                        <button
-                            type="button"
-                            className={`voice-mode-toggle ${isVoiceMode ? 'active' : ''} ${isListening ? 'listening' : ''} ${isTranscribing ? 'transcribing' : ''}`}
-                            onClick={toggleVoiceMode}
-                            title={isVoiceMode ? "Click to Stop Voice Mode" : "Click to Start Voice Mode (Whisper Tiny)"}
-                            style={{
-                                background: isTranscribing 
-                                    ? 'rgba(168, 85, 247, 0.4)'
-                                    : isListening 
-                                    ? `rgba(255, 60, 100, ${0.4 + Math.min(micVolume * 1.5, 0.5)})` 
-                                    : isVoiceMode 
-                                    ? 'rgba(34, 197, 94, 0.35)' 
-                                    : 'rgba(255, 255, 255, 0.1)',
-                                border: isListening ? '1px solid rgba(255, 100, 140, 0.8)' : '1px solid rgba(255, 255, 255, 0.15)',
-                                boxShadow: isListening ? `0 0 ${10 + micVolume * 30}px rgba(255, 50, 120, 0.6)` : 'none',
-                                borderRadius: '50%',
-                                width: '36px',
-                                height: '36px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                cursor: 'pointer',
-                                marginRight: '10px',
-                                transition: 'all 0.2s ease',
-                                flexShrink: 0
-                            }}
-                        >
-                            {isTranscribing ? '🧠' : (isListening ? '🎙️' : (isVoiceMode ? '🟢' : '🎤'))}
-                        </button>
-                        <input
-                            type="text"
+                        <textarea ref={textareaRef}
                             value={input}
                             onChange={handleInputChange}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    if (input.trim()) {
+                                        handleSend(e);
+                                        e.target.style.height = 'auto';
+                                    }
+                                }
+                            }}
                             placeholder={
                                 whisperStatus 
                                     ? `🎙️ ${whisperStatus}` 
                                     : (selectedModel === "kira" ? "Talk to Kira..." : "Whisper to Reina...")
                             }
                             disabled={isLoading}
+                            rows={1}
+                            className="chat-textarea"
                         />
-                        <button
-                            type="submit"
-                            className="send-btn"
-                            disabled={isLoading || !input.trim()}
-                        >
-                            {isLoading ? (
-                                <div className="loading-spinner" />
-                            ) : (
-                                <Send size={16} />
-                            )}
-                        </button>
-                        <button type="submit" id="reina-hidden-submit" style={{ display: 'none' }}></button>
-                    </form>
-                    
-                    {/* Game Trigger */}
-                    <button 
-                        className={`reina-game-btn ${showGame ? 'active' : ''}`}
+                        <div className="input-glass-toolbar">
+                            <button
+                                type="button"
+                                className={`voice-mode-toggle ${isVoiceMode ? 'active' : ''} ${isListening ? 'listening' : ''} ${isTranscribing ? 'transcribing' : ''}`}
+                                onClick={toggleVoiceMode}
+                                title={isVoiceMode ? "Click to Stop Voice Mode" : "Click to Start Voice Mode (Whisper Tiny)"}
+                            >
+                                {isTranscribing ? '🧠' : (isListening ? '🎙️' : (isVoiceMode ? '🟢' : '🎤'))}
+                            </button>
+{/* Game Trigger */}
+                    <button type="button" 
+                        style={{ position: 'relative', right: 0, bottom: 0, border: 'none', background: 'none' }} className={`reina-game-btn ${showGame ? 'active' : ''}`}
                         onClick={() => setShowGame(!showGame)}
                     >
                         🎮
                     </button>
+                            <button
+                                type="submit"
+                                className="send-btn"
+                                disabled={isLoading || !input.trim()}
+                            >
+                                {isLoading ? (
+                                    <div className="loading-dots">
+                                        <span>.</span><span>.</span><span>.</span>
+                                    </div>
+                                ) : (
+                                    <Send size={18} />
+                                )}
+                            </button>
+                        </div>
+                    </form>
+                    
+                    
 
                     {showGame && (
                         <div className={`reina-janken-panel ${gameType === 'chess' ? 'chess-active' : ''}`}>

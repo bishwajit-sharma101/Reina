@@ -383,7 +383,7 @@ function VrmModel({ vrmUrl, animationUrl, emotion, customExpression = null, isTa
             }
 
             // 3. NATURAL BLINKING
-            const isBlinkSuppressed = isPsycho || cur.blinkLeft > 0.5 || cur.blinkRight > 0.5;
+            const isBlinkSuppressed = isPsycho || cur.blinkLeft > 0.5 || cur.blinkRight > 0.5 || emotion === 'sweet' || emotion === 'happy';
 
             if (!isBlinkSuppressed) {
                 const blink = blinkRef.current;

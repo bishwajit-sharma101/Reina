@@ -93,3 +93,9 @@ out/
 # *.vrma
 client/public/animations/converter/
 *.exe
+
+# -------------------------------------------------------------------
+# 8. SENSITIVE AI DATA & GENERATED AUDIO
+# -------------------------------------------------------------------
+server/api/v1/ai/reina_*.json
+server/saved_audio/

@@ -1,3 +1,16 @@
+
+// --- CRASH DETECTOR ---
+process.on('uncaughtException', (err) => {
+    require('fs').writeFileSync(require('path').join(__dirname, 'FATAL_CRASH.log'), 'UNCAUGHT EXCEPTION: ' + err.stack, 'utf8');
+    console.error('UNCAUGHT EXCEPTION:', err);
+    process.exit(1);
+});
+process.on('unhandledRejection', (reason, promise) => {
+    require('fs').writeFileSync(require('path').join(__dirname, 'FATAL_CRASH.log'), 'UNHANDLED REJECTION: ' + (reason ? reason.stack || reason : 'Unknown'), 'utf8');
+    console.error('UNHANDLED REJECTION:', reason);
+    process.exit(1);
+});
+// ----------------------
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
 const express = require('express');

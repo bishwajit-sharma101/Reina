@@ -1,10 +1,11 @@
 {
-  "watch": ["./"],
-  "ext": "js,json",
   "ignore": [
-    "data/**",
-    "node_modules/**",
-    "uploads/**",
-    "backups/**"
+    "*.json",
+    "api/v1/ai/*.json",
+    "reina_*.json",
+    "uploads/*",
+    "scratch/*",
+    "FATAL_CRASH.log",
+    "fatal_route_error.log"
   ]
 }

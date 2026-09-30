@@ -53,6 +53,22 @@ router.post("/tts", async (req, res) => {
         const arrayBuffer = await response.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
 
+        // Save audio to disk
+        const fs = require('fs');
+        const path = require('path');
+        const audioDir = path.join(__dirname, '../../../saved_audio');
+        if (!fs.existsSync(audioDir)) {
+            fs.mkdirSync(audioDir, { recursive: true });
+        }
+        
+        // Clean text for filename (max 20 chars, alphanumeric)
+        const cleanText = text.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 20);
+        const filename = `reina_${Date.now()}_${cleanText}.mp3`;
+        const filePath = path.join(audioDir, filename);
+        
+        fs.writeFileSync(filePath, buffer);
+        console.log(`💾 [Fish Audio] Saved audio to: ${filePath}`);
+
         res.set({
             "Content-Type": "audio/mpeg",
             "Content-Length": buffer.length,
