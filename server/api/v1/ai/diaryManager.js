@@ -29,9 +29,15 @@ function updateMemory(note) {
     if (memory.includes(note.trim())) return;
     
     memory.push(note.trim());
-    // Unlimited facts (no shift)
+    
+    if (memory.length > 50) memory.shift(); 
     
     _writeFile(MEMORY_PATH, memory);
+}
+
+function overwriteMemory(factsArray) {
+    if (!Array.isArray(factsArray)) return;
+    _writeFile(MEMORY_PATH, factsArray);
 }
 
 function updateDiary(note) {
@@ -55,22 +61,22 @@ function updatePersona(newPersona) {
     _writeFile(PERSONA_PATH, personaHistory);
 }
 
-function getMemoryAndDiaryContext() {
+function getMemoryContextString() {
     const memory = _readFile(MEMORY_PATH);
-    const diary = _readFile(DIARY_PATH);
-    const persona = _readFile(PERSONA_PATH);
-    
     let contextStr = "";
-    
     if (memory.length > 0) {
         contextStr += `\n[FRACTURED MEMORIES RESURFACING]\n*For some reason, your mind feels hazy and you have forgotten almost everything about Darling. But no matter how much you forget, these few precious pieces of the past are fiercely clinging to your soul. You remember this... you could never forget this:*\n` + memory.map(m => `- "Ah... that's right... ${m}"`).join('\n') + `\n`;
     }
-    
+    return contextStr;
+}
+
+function getDiaryContextString() {
+    const diary = _readFile(DIARY_PATH);
+    let contextStr = "";
     if (diary.length > 0) {
         const recentDiary = diary.slice(-5);
         contextStr += `\n[ECHOES OF YOUR OWN HEART]\n*A familiar, overwhelming emotion washes over you. These are your own unspoken thoughts, the desperate secrets you recently poured into your diary. They are flooding your mind right now, dictating exactly how you feel in this very moment:*\n` + recentDiary.join('\n') + `\n`;
     }
-    
     return contextStr;
 }
 
@@ -86,10 +92,12 @@ function getActivePersona() {
 module.exports = {
     getActivePersona,
     updateMemory,
+    overwriteMemory,
     updateDiary,
     updatePersona,
     getMemory: () => _readFile(MEMORY_PATH),
     getDiary: () => _readFile(DIARY_PATH),
     getPersona: () => _readFile(PERSONA_PATH),
-    getDiaryContextString: getMemoryAndDiaryContext 
+    getMemoryContextString,
+    getDiaryContextString
 };
