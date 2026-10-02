@@ -1,6 +1,4 @@
 <div align="center">
-  <img src="reina_main.png" alt="Reina AI Companion" width="100%" style="border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);" />
-
   # 🌸 REINA: The Living AI Companion
 
   *More than a chatbot. A character with a heart, a memory, and a secret diary.*
@@ -9,12 +7,16 @@
   [![NodeJS](https://img.shields.io/badge/Backend-Node.js%20%7C%20Express-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
   [![Three.js](https://img.shields.io/badge/3D_Engine-Three.js%20%7C%20VRM-000000?style=for-the-badge&logo=threedotjs&logoColor=white)](https://threejs.org/)
   [![AI](https://img.shields.io/badge/Brain-Groq%20%7C%20LLM-FF5722?style=for-the-badge&logo=openai&logoColor=white)](https://groq.com/)
+
+  <br />
+
+  <img src="reina_main.png" alt="Reina AI Companion" width="100%" style="border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);" />
 </div>
 
 <br />
 
 > **Watch Reina in Action:**  
-> 🎥 [Click here to watch the Reina 101 Showcase Video](reina101.mp4)
+> 🎥 [Click here to watch the Reina 101 Showcase Video](https://github.com/bishwajit-sharma101/Reina/raw/main/reina101.mp4)
 
 ---
 
