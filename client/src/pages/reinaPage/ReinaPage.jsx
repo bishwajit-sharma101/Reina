@@ -46,6 +46,12 @@ export function sanitizeVrmEmotion(raw) {
         yandere: "scary_smile2",
         blush: "sweet",
         crying: "sad",
+        confused: "neutral",
+        shocked: "neutral",
+        shy: "sweet",
+        flustered: "jealous",
+        smug: "happy",
+        soft: "sweet",
         scorn: "angry",
         sexy: "flirty",
         weak: "sad",
@@ -2181,7 +2187,8 @@ Follow the move tag with UP TO TWO short, punchy lines (max 2 lines) of high-ene
                 let uiText = rawUiText
                     .replace(/<(thought|think|execute|search|type)>[\s\S]*?<\/(thought|think|execute|search|type)>/gi, '') 
                     .replace(/<(thought|think|execute|search|type)>[\s\S]*/gi, '') 
-                    .replace(/<[^>]*$/g, '') // HIDE PARTIAL TAGS AT THE END OF STREAM
+                    .replace(/<[^>]*$/g, '') // HIDE PARTIAL HTML TAGS AT THE END OF STREAM
+                    .replace(/\[[^\]]*$/g, '') // HIDE PARTIAL BRACKET TAGS AT THE END OF STREAM
                     .replace(/<OPEN_GAME[^>]*>/gi, '') 
                     .replace(/<MOVE[^>]*>/gi, '') 
                     .replace(/\[ACTION:[A-Z_]+\]/g, '')
@@ -2215,6 +2222,7 @@ Follow the move tag with UP TO TWO short, punchy lines (max 2 lines) of high-ene
                         .replace(/<OPEN_GAME[^>]*>/gi, '')
                         .replace(/<MOVE[^>]*>/gi, '')
                         .replace(/\[SYSTEM(?:\s+MESSAGE)?:\s*[^\]]*\]/gi, '')
+                        .replace(/\[SYSTEM.*$/gi, '') // FIX: Remove any unclosed SYSTEM tags caused by sentence splitting
                         .replace(/\[(?:This|The|User|Response|Note|System|Assistant)[^\]]*\]/gi, '');
 
                     if (selectedTts === "fish") {
@@ -2287,6 +2295,8 @@ Follow the move tag with UP TO TWO short, punchy lines (max 2 lines) of high-ene
                 .replace(/\[emotion=[^\]]+\]/g, '')
                 .replace(/\[anim=[^\]]+\]/g, '')
                 .replace(/\[voice=[^\]]+\]/g, '')
+                .replace(/\[SYSTEM(?:\s+MESSAGE)?:\s*[^\]]*\]/gi, '') // FIX: Strip SYSTEM tags from final output
+                .replace(/\[(?:This|The|User|Response|Note|System|Assistant)[^\]]*\]/gi, '') 
                 .replace(/\[[A-Z_]+\]/g, '') 
                 .replace(/\(Translation:[^)]+\)/gi, '') 
                 .replace(/\([^)]*translation[^)]*\)/gi, '') 
