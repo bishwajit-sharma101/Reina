@@ -25,14 +25,8 @@ function _writeFile(filePath, data) {
 
 function updateMemory(note) {
     if (!note || typeof note !== 'string') return;
-    const memory = _readFile(MEMORY_PATH);
-    if (memory.includes(note.trim())) return;
-    
-    memory.push(note.trim());
-    
-    if (memory.length > 50) memory.shift(); 
-    
-    _writeFile(MEMORY_PATH, memory);
+    const facts = note.split('|').map(s => s.trim()).filter(s => s);
+    _writeFile(MEMORY_PATH, facts);
 }
 
 function overwriteMemory(factsArray) {
