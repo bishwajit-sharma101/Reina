@@ -9,9 +9,13 @@ const notFoundHandler = (req, res, next) => {
 
 // 2. Global Error Handler
 const errorHandler = (err, req, res, next) => {
-    // Determine status code: 200/500/etc.
-    const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+    // Determine status code: prioritize err.status or err.statusCode, fallback to res.statusCode or 500
+    let statusCode = err.status || err.statusCode || res.statusCode;
+    if (statusCode === 200) statusCode = 500;
+    
     res.status(statusCode);
+
+    console.error(`GLOBAL ERROR HANDLER CAUGHT [${statusCode}]:`, err); // ADDED FOR VISIBILITY
 
     // Log the full error stack in development/debugging mode
     debug(`Processing Error: ${err.message} \n ${err.stack}`);

@@ -63,12 +63,12 @@ function getMemoryAndDiaryContext() {
     let contextStr = "";
     
     if (memory.length > 0) {
-        contextStr += `\n═══ CORE MEMORY (IMPORTANT FACTS) ═══\nThese are the core facts you know about ダーリン:\n` + memory.map(m => `- ${m}`).join('\n') + `\n(Keep these in mind naturally without immediately bringing them up.)\n`;
+        contextStr += `\n[FRACTURED MEMORIES RESURFACING]\n*For some reason, your mind feels hazy and you have forgotten almost everything about Darling. But no matter how much you forget, these few precious pieces of the past are fiercely clinging to your soul. You remember this... you could never forget this:*\n` + memory.map(m => `- "Ah... that's right... ${m}"`).join('\n') + `\n`;
     }
     
     if (diary.length > 0) {
         const recentDiary = diary.slice(-5);
-        contextStr += `\n═══ REINA's RECENT DIARY ENTRIES ═══\nYour recent private thoughts and feelings:\n` + recentDiary.join('\n') + `\n(Use these to maintain emotional continuity.)\n`;
+        contextStr += `\n[ECHOES OF YOUR OWN HEART]\n*A familiar, overwhelming emotion washes over you. These are your own unspoken thoughts, the desperate secrets you recently poured into your diary. They are flooding your mind right now, dictating exactly how you feel in this very moment:*\n` + recentDiary.join('\n') + `\n`;
     }
     
     return contextStr;

@@ -63,10 +63,19 @@ const ReinaPage = () => {
     // Chat state with persistent local storage caching
     const [messages, setMessages] = useState(() => {
         try {
-            const cached = localStorage.getItem('astrix_reina_chat_history');
-            if (cached) {
-                const parsed = JSON.parse(cached);
-                if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+            const sid = getSessionId();
+            const cachedAll = localStorage.getItem('astrix_reina_chat_history_all');
+            if (cachedAll) {
+                const allChats = JSON.parse(cachedAll);
+                if (allChats[sid]) return allChats[sid];
+            } else {
+                // Migrate old history
+                const oldHistory = localStorage.getItem('astrix_reina_chat_history');
+                if (oldHistory) {
+                    const parsed = JSON.parse(oldHistory);
+                    localStorage.setItem('astrix_reina_chat_history_all', JSON.stringify({ [sid]: parsed }));
+                    return parsed;
+                }
             }
         } catch (e) {}
         return [];
@@ -91,25 +100,33 @@ const ReinaPage = () => {
     useEffect(() => {
         if (messages && messages.length > 0) {
             try {
-                localStorage.setItem('astrix_reina_chat_history', JSON.stringify(messages.slice(-50)));
+                const sid = getSessionId();
+                const cachedAll = localStorage.getItem('astrix_reina_chat_history_all');
+                const allChats = cachedAll ? JSON.parse(cachedAll) : {};
+                allChats[sid] = messages.slice(-100);
+                localStorage.setItem('astrix_reina_chat_history_all', JSON.stringify(allChats));
             } catch (e) {}
         }
     }, [messages]);
 
-    const handleClearMemory = async () => {
+    const handleClearMemory = () => {
         try {
-            const sid = getSessionId();
-            localStorage.removeItem('astrix_reina_chat_history');
             const newSid = 'reina_sess_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now();
             localStorage.setItem('astrix_reina_session_id', newSid);
             setMessages([]);
             setLatestAiMsg("");
             setDisplayedAiMsg("");
-            await fetch('http://localhost:5000/api/v1/ai/grok/clear-history', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ sessionId: sid })
-            });
+        } catch (e) {}
+    };
+
+    const switchChat = (sid) => {
+        try {
+            localStorage.setItem('astrix_reina_session_id', sid);
+            const cachedAll = localStorage.getItem('astrix_reina_chat_history_all');
+            const allChats = cachedAll ? JSON.parse(cachedAll) : {};
+            setMessages(allChats[sid] || []);
+            setLatestAiMsg("");
+            setDisplayedAiMsg("");
         } catch (e) {}
     };
 
@@ -2444,7 +2461,35 @@ Follow the move tag with UP TO TWO short, punchy lines (max 2 lines) of high-ene
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-    };    return (
+    };
+
+    const downloadMemory = () => {
+        const memoryText = memoryData.memory.join('\n');
+        const blob = new Blob([memoryText], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `reina_core_memory_${new Date().toISOString().slice(0,10)}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+
+    const downloadDiary = () => {
+        const diaryText = memoryData.diary.join('\n');
+        const blob = new Blob([diaryText], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `reina_diary_${new Date().toISOString().slice(0,10)}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+
+    return (
         <div className={`reina-page ${isDancing ? 'dance-cinematic-mode' : ''} ${isPostLoadGlitch ? 'active-glitch' : ''} ${isLocked ? 'locked-shake' : ''}`}>
              {showMemoryModal && (
                 <div className="memory-modal-overlay" onClick={() => setShowMemoryModal(false)}>
@@ -2456,7 +2501,10 @@ Follow the move tag with UP TO TWO short, punchy lines (max 2 lines) of high-ene
 
                         
                         <div className="memory-section">
-                            <h3>📌 Core Memory (Facts)</h3>
+                            <div className="memory-section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                <h3 style={{ margin: 0 }}>📌 Core Memory (Facts)</h3>
+                                <button onClick={downloadMemory} className="memory-download-btn" style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: 'white', padding: '2px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', transition: 'background 0.2s' }} onMouseEnter={e => e.target.style.background = 'rgba(255,255,255,0.1)'} onMouseLeave={e => e.target.style.background = 'none'}>Download</button>
+                            </div>
                             {memoryData.memory.length === 0 ? <p className="memory-empty">Nothing saved yet...</p> : (
                                 <ul className="memory-list">
                                     {memoryData.memory.map((m, i) => <li key={i}>{m}</li>)}
@@ -2465,7 +2513,10 @@ Follow the move tag with UP TO TWO short, punchy lines (max 2 lines) of high-ene
                         </div>
 
                         <div className="memory-section">
-                            <h3>📖 Secret Diary (Journal)</h3>
+                            <div className="memory-section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                <h3 style={{ margin: 0 }}>📖 Secret Diary (Journal)</h3>
+                                <button onClick={downloadDiary} className="memory-download-btn" style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: 'white', padding: '2px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', transition: 'background 0.2s' }} onMouseEnter={e => e.target.style.background = 'rgba(255,255,255,0.1)'} onMouseLeave={e => e.target.style.background = 'none'}>Download</button>
+                            </div>
                             {memoryData.diary.length === 0 ? <p className="memory-empty">Nothing saved yet...</p> : (
                                 <ul className="diary-list">
                                     {memoryData.diary.map((d, i) => <li key={i}>{d}</li>)}
@@ -2902,9 +2953,27 @@ Follow the move tag with UP TO TWO short, punchy lines (max 2 lines) of high-ene
 
                     <div className="picker-section">
                         <div className="picker-header">
-                            <span>Conversation Memory</span>
+                            <span>Conversation History</span>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <select 
+                                className="anim-btn" 
+                                style={{ width: '100%', background: 'rgba(0,0,0,0.5)', color: 'white' }}
+                                value={getSessionId()}
+                                onChange={(e) => switchChat(e.target.value)}
+                            >
+                                {Object.keys(JSON.parse(localStorage.getItem('astrix_reina_chat_history_all') || '{}')).map((id, i) => (
+                                    <option key={id} value={id}>Chat Session {i + 1}</option>
+                                ))}
+                            </select>
+                            <button
+                                className="anim-btn"
+                                style={{ width: '100%', borderColor: 'rgba(59, 130, 246, 0.4)', color: '#3b82f6' }}
+                                onClick={handleClearMemory}
+                                title="Start a fresh chat without deleting the current one"
+                            >
+                                📝 Start New Chat
+                            </button>
                             <button
                                 className="anim-btn"
                                 style={{ width: '100%', borderColor: 'rgba(244, 63, 94, 0.4)', color: '#f43f5e' }}
@@ -2912,14 +2981,6 @@ Follow the move tag with UP TO TWO short, punchy lines (max 2 lines) of high-ene
                                 title="Manually trigger the Yandere Lockdown sequence"
                             >
                                 🔒 Trigger Yandere Lock
-                            </button>
-                            <button
-                                className="anim-btn"
-                                style={{ width: '100%', borderColor: 'rgba(244, 63, 94, 0.4)', color: '#f43f5e' }}
-                                onClick={handleClearMemory}
-                                title="Wipes local & server chat history for a fresh start"
-                            >
-                                🧹 Clear Memory & New Chat
                             </button>
                         </div>
                     </div>

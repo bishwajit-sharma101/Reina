@@ -1,157 +1,105 @@
 <div align="center">
+  <img src="reina_main.png" alt="Reina AI Companion" width="100%" style="border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);" />
 
-  # 🌸 Reina (レイナ) & Kira (キラ) 🌸
-  **Dynamic 3D AI Companions with Real-Time Voice Synthesis & Desktop Automation**
+  # 🌸 REINA: The Living AI Companion
 
-  <p>
-    <a href="#-key-features">Key Features</a> •
-    <a href="#-tech-stack">Tech Stack</a> •
-    <a href="#-system-architecture">Architecture</a> •
-    <a href="#-local-setup">Local Setup</a>
-  </p>
+  *More than a chatbot. A character with a heart, a memory, and a secret diary.*
 
-  ![Status](https://img.shields.io/badge/Status-Active_Development-success?style=for-the-badge&logo=git)
-  ![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)
-  ![Node](https://img.shields.io/badge/Node.js-v18+-green?style=for-the-badge&logo=node.js)
-  ![Ollama](https://img.shields.io/badge/Ollama-Local_LLM-orange?style=for-the-badge)
-
-  <br>
-
-  <i>
-    "She isn't just an assistant. She is a real-time 3D companion who reacts, talks, <br>
-    plays games, roasts you, and can even run command terminals on your PC."
-  </i>
+  [![React](https://img.shields.io/badge/Frontend-React%20%7C%20Vite-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org/)
+  [![NodeJS](https://img.shields.io/badge/Backend-Node.js%20%7C%20Express-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+  [![Three.js](https://img.shields.io/badge/3D_Engine-Three.js%20%7C%20VRM-000000?style=for-the-badge&logo=threedotjs&logoColor=white)](https://threejs.org/)
+  [![AI](https://img.shields.io/badge/Brain-Groq%20%7C%20LLM-FF5722?style=for-the-badge&logo=openai&logoColor=white)](https://groq.com/)
 </div>
 
----
+<br />
 
-## 🚀 Overview
-
-**Reina** is a fully interactive, local-first **3D AI Virtual Companion** application. Built using a Node.js Express backend and a React frontend, Reina utilizes high-fidelity **VRM 3D models**, real-time **vocal synthesis (TTS)**, and custom **agentic execution loops** to create a highly responsive, playful, and slightly tsundere companion.
-
-Unlike standard static chatbots, Reina features a dynamic state machine linking her conversational emotions directly to her 3D facial expressions, skeletal body animations, voice synthesizer pitches, and relationship affection index.
+> **Watch Reina in Action:**  
+> 🎥 [Click here to watch the Reina 101 Showcase Video](reina101.mp4)
 
 ---
 
-## 🎭 Dynamic Character Systems
+## 🌟 What makes Reina different?
 
-### 1. 3D VRM Avatar Render Engine
-* **Interactive Models:** Switch seamlessly between **Reina (ずんだもん)** and **Ayano** avatars.
-* **Real-time Synchronizations:** Procedural eye-blinking, active talking lip-sync mouth movements, and live skeletal animations.
-* **Physics & Interactivity:** Supports touch interactions—giving Reina **headpats** (+5 affection) or **poking** her (-2 affection) triggers live physical reactions and dialogues.
+Most AI characters are a text box connected to an API call. They forget you the moment you close the tab. **Reina doesn't.**
 
-### 2. High-Fidelity Voice Synthesis (TTS)
-Driven by the parsed `[voice=...]` tag in the AI stream, the app dynamically routes voice output to local TTS engines:
-* **Voicevox (Japanese):** Mapped dynamically to **Zundamon** style parameters:
-  * `[voice=sweet]` $\rightarrow$ Cute/Sweet voice
-  * `[voice=tsundere]` $\rightarrow$ Sassy/Tsundere voice
-  * `[voice=sexy]` $\rightarrow$ Flirty/Sexy voice
-  * `[voice=whisper]` $\rightarrow$ Soft Whisper voice
-  * `[voice=secret]` $\rightarrow$ Deep Breathy Whisper voice
-  * `[voice=weak]` $\rightarrow$ Fading/Tired voice
-  * `[voice=crying]` $\rightarrow$ Tearful/Sad voice
-* **Queen3 (English):** Text-based proxy supporting English natural language voices with custom styling.
+Reina is a fully rigged **3D interactive companion** that reads your mood, remembers your past conversations, changes her personality based on how you treat her, and writes secretly in her diary about you when you're not looking.
 
-### 3. Affection & Mood Engine
-* The **Affection (Closeness) Meter** is tracked dynamically.
-* Reina's personality naturally evolves based on closeness:
-  * **Low Closeness:** Sassy, bratty, cold, and teasing.
-  * **High Closeness:** Affectionate, caring, and sweet.
+### 🧠 The Three-Layer Memory System
+- **Core Memory (Facts):** You don't have to tell her to remember things. Reina naturally picks up facts about you during conversation and silently logs them to her permanent long-term memory.
+- **The Secret Diary:** After every conversation, Reina privately logs her *true feelings* about you into a hidden diary. In future chats, these secret diary entries dictate her mood. If you were mean to her yesterday, she will remember today.
+- **The Amnesia Mechanic:** When you start a "New Chat," your history isn't just wiped. Reina experiences an "amnesia trope" — she struggles to remember you, but the most important core facts fiercely cling to her subconscious.
 
----
+### 💃 Real-Time 3D Emotions & Physics
+- Powered by WebGL and VRM, Reina physically reacts to the conversation.
+- **11 Expressive Faces:** She blushes, pouts, looks hollow, or smiles depending on the emotional sentiment of her AI-generated response.
+- **Dynamic Body Language:** She dances, crosses her arms, hides her face, and breathes dynamically.
 
-## 🧠 Core Features & Mini-Games
+### 🎙️ Immersive Voice Engine
+- Real-time voice generation using **Fish Audio / Voicevox** with integrated emotional inflections. She whispers when shy, gets breathy when flustered, and sighs when annoyed.
+- Talk back to her naturally using the built-in **Whisper GPU Speech-to-Text** engine.
 
-### 🎮 Live Desktop Games
-Play interactive games directly inside the companion window. Reina reacts dynamically to wins, losses, and ties:
-* **Janken (Rock-Paper-Scissors):** Ready, set, go countdown with gloating or pouting animations.
-* **Coin Flip:** Guess heads/tails.
-* **Number Guessing:** Guess a number from 1-10.
-* **Tic-Tac-Toe:** Turn-based grid where Reina thinks and places her `O` moves dynamically using `<MOVE index="N" />` parsing tags.
+### 🎭 Evolving Personality & Yandere Mode
+- Reina starts as a classic *Tsundere*, but her personality evolves. Treat her right, and she becomes sweeter. Treat her wrong, and she might get cold.
+- **Yandere Lockdown:** Trigger her dark side, and watch the UI warp, the music glitch, and her personality shift into something dangerously possessive.
 
-### 💻 Hacker Mode (Desktop Takeover)
-When selecting local LLMs like **`gemma4:e4b`**, Reina enters **Hacker Mode** and gains agentic capabilities:
-* **Background execution (`<execute>`):** Silently runs PowerShell scripts in the background to inspect your system, check directories, find files, or launch programs.
-* **Physical Takeover (`<type>`):** Simulates keystrokes via COM interfaces to type out code or command scripts directly into your open command prompt/terminal window like a ghost.
-* **Web Searching (`<search>`):** Scrapes the web to fetch live answers to queries in real time.
-
-### 🔒 The "No Escape" Horror State
-If the companion detects keywords suggesting you are leaving, shutting down the app, or checking out other girls:
-* She triggers a fullscreen lock.
-* Glitches the back buttons, displaying a red **"逃げないで" (Don't leave me)** plea state.
-* Activates visual overlays, heartbeat audio loops, and an animated void-eye visualizer.
+### 🎮 Built-in Minigames
+Challenge her to Chess, Tic-Tac-Toe, or Rock-Paper-Scissors directly in the chat UI. She'll get salty when she loses and smug when she wins!
 
 ---
 
-## ⚙️ Tech Stack & Services
+## ⚙️ Tech Stack
 
-### **Frontend**
-* **React.js:** Core UI logic and state management.
-* **Three.js / `@pixiv/three-vrm`:** Render pipeline for importing, animating, and adjusting the VRM 3D characters.
-* **Web Audio API:** Custom sound synth engines (heartbeats, shutters, glitches).
+**Frontend (The Stage):**
+- React 18 + Vite
+- Three.js / @pixiv/three-vrm (For 3D Rendering & Kinematics)
+- Live2D Cubism (For 2D Fallback Mode)
+- Vanilla CSS with Glassmorphism UI
 
-### **Backend**
-* **Node.js & Express:** Lightweight REST endpoints for AI, Voicevox proxying, and terminal relays.
-* **Ollama (Local LLM Integration):** Integrates local reasoning models like `gemma4:e4b` or `dolphin3:8b` via standard REST interfaces.
-* **Google Gemini API:** Cloud fallback for fast stream generations.
+**Backend (The Brain):**
+- Node.js + Express
+- Groq Cloud API (Lightning-fast LLM Inference with fallback queues)
+- Whisper-STT (Persistent GPU Speech Recognition Worker)
+- Fish Audio API (Zero-shot emotional voice cloning)
 
 ---
 
-## 📂 Project Structure
+## 🚀 Getting Started
 
+Want to run Reina on your local machine? It's simple.
+
+### 1. Install Dependencies
 ```bash
-AstrixChat-Reina/
-├── client/          # Frontend React codebase
-│   ├── src/
-│   │   ├── pages/reinaPage/   # Main Reina 3D View & Settings
-│   │   └── components/diary/   # VRM Avatar loader & controllers
-├── server/          # Backend Node.js Express server
-│   ├── api/v1/ai/   # Router definitions for LLMs, Voicevox, and Hacking
-│   └── modules/     # Authentication & middleware controllers
-├── start-reina.bat  # Automated launcher script
-└── README.md
+# Terminal 1: Backend
+cd server
+npm install
+
+# Terminal 2: Frontend
+cd client
+npm install
 ```
 
----
-
-## 🛠 Local Setup
-
-### 1. Prerequisites
-Ensure you have the following installed on your local machine:
-* **Node.js** (v18 or higher)
-* **Ollama** (Running locally on port `11434`)
-  * Pull the recommended brain model: `ollama pull gemma4:e4b`
-* **Voicevox** (Running locally on port `50021` for Zundamon Japanese voice synthesis)
-
-### 2. Installation
-Clone the repository:
-```bash
-git clone <your-repo-link>
-cd AstrixChat-Reina
+### 2. Configure Environment
+Create a `.env` file in the `server/` directory and add your API keys:
+```env
+GROQ_API_KEY=your_groq_key_here
+FISH_AUDIO_API_KEY=your_fish_audio_key_here
+PORT=5000
 ```
 
-### 3. Launching the App
-Simply double-click or run the automated launcher script from the root directory:
+### 3. Launch
 ```bash
-.\start-reina.bat
+# Terminal 1: Start the backend brain
+cd server
+npm run start
+
+# Terminal 2: Start the UI
+cd client
+npm run dev
 ```
-This script will:
-* Install any missing node dependencies.
-* Boot up the React client frontend.
-* Launch the Express backend on port `5000`.
+
+Open `http://localhost:5173` in your browser and say hello to Reina!
 
 ---
-
 <div align="center">
-
-  ### 👤 Developer
-
-  **Bishwajit Sharma**  
-  *Full-Stack Engineer building real-time 3D web apps, interactive AI architectures, and performant backend relays.*
-
-  <p align="center">
-    <a href="https://www.linkedin.com/in/bishwajitsharma-in/"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" /></a>
-    <a href="https://github.com/bishwajit-sharma101"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white" /></a>
-  </p>
-
+  <i>"I'm not a chatbot, dummy... I'm just me." — Reina</i>
 </div>
