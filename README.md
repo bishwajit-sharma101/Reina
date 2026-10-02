@@ -1,7 +1,7 @@
 <div align="center">
-  # 🌸 REINA: The Living AI Companion
+  <h1>🌸 REINA: The Living AI Companion 🌸</h1>
 
-  *More than a chatbot. A character with a heart, a memory, and a secret diary.*
+  <p><em>More than a chatbot. A character with a heart, a memory, and a secret diary.</em></p>
 
   [![React](https://img.shields.io/badge/Frontend-React%20%7C%20Vite-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org/)
   [![NodeJS](https://img.shields.io/badge/Backend-Node.js%20%7C%20Express-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
