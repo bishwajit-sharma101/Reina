@@ -16,7 +16,7 @@
 <br />
 
 > **Watch Reina in Action:**  
-> 🎥 [Click here to watch the Reina 101 Showcase Video](https://github.com/bishwajit-sharma101/Reina/raw/main/reina101.mp4)
+> <video src="https://github.com/bishwajit-sharma101/Reina/raw/main/reina101.mp4" controls width="100%"></video>
 
 ---
 
